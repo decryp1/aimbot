@@ -365,7 +365,7 @@ function EspObject:Render()
 		role.Transparency = 1
 		role.Outline = true
 		role.OutlineColor = Color3.new()
-		role.Position = corners.topRight + Vector2.new(2, -role.TextBounds.Y/2)
+		role.Position = corners.topRight + Vector2.new(2, -role.TextBounds.Y/2.4)
 	end
 
 	visible.tracer.Visible = enabled and onScreen and options.tracer
@@ -607,7 +607,6 @@ local EspInterface = {
 			chamsVisibleOnly = false,
 			chamsFillColor = { Color3.new(0.2, 0.2, 0.2), 0.5 },
 			chamsOutlineColor = { Color3.new(1,0,0), 0 },
-			hideresp = false,
 			killeresp = false
 		},
 		friendly = {
@@ -747,7 +746,7 @@ function EspInterface.getRole(player)
 	local character = player and EspInterface.getCharacter(player)
 	if character then
 		if character:FindFirstChild("RedVest") then
-			return "KILLER"
+			return "SEEKER"
 		elseif character:FindFirstChild("BlueVest") then
 			return "HIDER"
 		end
