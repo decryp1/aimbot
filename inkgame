@@ -365,7 +365,7 @@ function EspObject:Render()
 		role.Transparency = 1
 		role.Outline = true
 		role.OutlineColor = Color3.new()
-		role.Position = corners.topRight + Vector2.new(2, -role.TextBounds.Y/1)
+		role.Position = corners.topRight + Vector2.new(2, -role.TextBounds.Y/3)
 	end
 
 	visible.tracer.Visible = enabled and onScreen and options.tracer
