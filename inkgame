@@ -560,147 +560,146 @@ local EspInterface = {
 		maxDistance = 150,
 		useTeamColor = false
 	},
-	EspInterface.teamSettings = {
-	enemy = {
-		enabled = false,
-		box = false,
-		boxColor = { Color3.new(1,0,0), 1 },
-		boxOutline = true,
-		boxOutlineColor = { Color3.new(), 1 },
-		boxFill = false,
-		boxFillColor = { Color3.new(1,0,0), 0.5 },
-		healthBar = false,
-		healthyColor = Color3.new(0,1,0),
-		dyingColor = Color3.new(1,0,0),
-		healthBarOutline = true,
-		healthBarOutlineColor = { Color3.new(), 0.5 },
-		healthText = false,
-		healthTextColor = { Color3.new(1,1,1), 1 },
-		healthTextOutline = true,
-		healthTextOutlineColor = Color3.new(),
-		box3d = false,
-		box3dColor = { Color3.new(1,0,0), 1 },
-		name = false,
-		nameColor = { Color3.new(1,1,1), 1 },
-		nameOutline = true,
-		nameOutlineColor = Color3.new(),
-		weapon = false,
-		weaponColor = { Color3.new(1,1,1), 1 },
-		weaponOutline = true,
-		weaponOutlineColor = Color3.new(),
-		distance = false,
-		distanceColor = { Color3.new(1,1,1), 1 },
-		distanceOutline = true,
-		distanceOutlineColor = Color3.new(),
-		tracer = false,
-		tracerOrigin = "Bottom",
-		tracerColor = { Color3.new(1,0,0), 1 },
-		tracerOutline = true,
-		tracerOutlineColor = { Color3.new(), 1 },
-		offScreenArrow = false,
-		offScreenArrowColor = { Color3.new(1,1,1), 1 },
-		offScreenArrowSize = 15,
-		offScreenArrowRadius = 150,
-		offScreenArrowOutline = true,
-		offScreenArrowOutlineColor = { Color3.new(), 1 },
-		chams = false,
-		chamsVisibleOnly = false,
-		chamsFillColor = { Color3.new(0.2, 0.2, 0.2), 0.5 },
-		chamsOutlineColor = { Color3.new(1,0,0), 0 },
-		hideresp = false,
-		killeresp = false
-	},
-	friendly = {
-		enabled = false,
-		box = false,
-		boxColor = { Color3.new(0,1,0), 1 },
-		boxOutline = true,
-		boxOutlineColor = { Color3.new(), 1 },
-		boxFill = false,
-		boxFillColor = { Color3.new(0,1,0), 0.5 },
-		healthBar = false,
-		healthyColor = Color3.new(0,1,0),
-		dyingColor = Color3.new(1,0,0),
-		healthBarOutline = true,
-		healthBarOutlineColor = { Color3.new(), 0.5 },
-		healthText = false,
-		healthTextColor = { Color3.new(1,1,1), 1 },
-		healthTextOutline = true,
-		healthTextOutlineColor = Color3.new(),
-		box3d = false,
-		box3dColor = { Color3.new(0,1,0), 1 },
-		name = false,
-		nameColor = { Color3.new(1,1,1), 1 },
-		nameOutline = true,
-		nameOutlineColor = Color3.new(),
-		weapon = false,
-		weaponColor = { Color3.new(1,1,1), 1 },
-		weaponOutline = true,
-		weaponOutlineColor = Color3.new(),
-		distance = false,
-		distanceColor = { Color3.new(1,1,1), 1 },
-		distanceOutline = true,
-		distanceOutlineColor = Color3.new(),
-		tracer = false,
-		tracerOrigin = "Bottom",
-		tracerColor = { Color3.new(0,1,0), 1 },
-		tracerOutline = true,
-		tracerOutlineColor = { Color3.new(), 1 },
-		offScreenArrow = false,
-		offScreenArrowColor = { Color3.new(1,1,1), 1 },
-		offScreenArrowSize = 15,
-		offScreenArrowRadius = 150,
-		offScreenArrowOutline = true,
-		offScreenArrowOutlineColor = { Color3.new(), 1 },
-		chams = false,
-		chamsVisibleOnly = false,
-		chamsFillColor = { Color3.new(0.2, 0.2, 0.2), 0.5 },
-		chamsOutlineColor = { Color3.new(0,1,0), 0 },
-		hideresp = false,
-
-
-killeresp = false
+	teamSettings = {
+		enemy = {
+			enabled = false,
+			box = false,
+			boxColor = { Color3.new(1,0,0), 1 },
+			boxOutline = true,
+			boxOutlineColor = { Color3.new(), 1 },
+			boxFill = false,
+			boxFillColor = { Color3.new(1,0,0), 0.5 },
+			healthBar = false,
+			healthyColor = Color3.new(0,1,0),
+			dyingColor = Color3.new(1,0,0),
+			healthBarOutline = true,
+			healthBarOutlineColor = { Color3.new(), 0.5 },
+			healthText = false,
+			healthTextColor = { Color3.new(1,1,1), 1 },
+			healthTextOutline = true,
+			healthTextOutlineColor = Color3.new(),
+			box3d = false,
+			box3dColor = { Color3.new(1,0,0), 1 },
+			name = false,
+			nameColor = { Color3.new(1,1,1), 1 },
+			nameOutline = true,
+			nameOutlineColor = Color3.new(),
+			weapon = false,
+			weaponColor = { Color3.new(1,1,1), 1 },
+			weaponOutline = true,
+			weaponOutlineColor = Color3.new(),
+			distance = false,
+			distanceColor = { Color3.new(1,1,1), 1 },
+			distanceOutline = true,
+			distanceOutlineColor = Color3.new(),
+			tracer = false,
+			tracerOrigin = "Bottom",
+			tracerColor = { Color3.new(1,0,0), 1 },
+			tracerOutline = true,
+			tracerOutlineColor = { Color3.new(), 1 },
+			offScreenArrow = false,
+			offScreenArrowColor = { Color3.new(1,1,1), 1 },
+			offScreenArrowSize = 15,
+			offScreenArrowRadius = 150,
+			offScreenArrowOutline = true,
+			offScreenArrowOutlineColor = { Color3.new(), 1 },
+			chams = false,
+			chamsVisibleOnly = false,
+			chamsFillColor = { Color3.new(0.2, 0.2, 0.2), 0.5 },
+			chamsOutlineColor = { Color3.new(1,0,0), 0 },
+			hideresp = false,
+			killeresp = false
+		},
+		friendly = {
+			enabled = false,
+			box = false,
+			boxColor = { Color3.new(0,1,0), 1 },
+			boxOutline = true,
+			boxOutlineColor = { Color3.new(), 1 },
+			boxFill = false,
+			boxFillColor = { Color3.new(0,1,0), 0.5 },
+			healthBar = false,
+			healthyColor = Color3.new(0,1,0),
+			dyingColor = Color3.new(1,0,0),
+			healthBarOutline = true,
+			healthBarOutlineColor = { Color3.new(), 0.5 },
+			healthText = false,
+			healthTextColor = { Color3.new(1,1,1), 1 },
+			healthTextOutline = true,
+			healthTextOutlineColor = Color3.new(),
+			box3d = false,
+			box3dColor = { Color3.new(0,1,0), 1 },
+			name = false,
+			nameColor = { Color3.new(1,1,1), 1 },
+			nameOutline = true,
+			nameOutlineColor = Color3.new(),
+			weapon = false,
+			weaponColor = { Color3.new(1,1,1), 1 },
+			weaponOutline = true,
+			weaponOutlineColor = Color3.new(),
+			distance = false,
+			distanceColor = { Color3.new(1,1,1), 1 },
+			distanceOutline = true,
+			distanceOutlineColor = Color3.new(),
+			tracer = false,
+			tracerOrigin = "Bottom",
+			tracerColor = { Color3.new(0,1,0), 1 },
+			tracerOutline = true,
+			tracerOutlineColor = { Color3.new(), 1 },
+			offScreenArrow = false,
+			offScreenArrowColor = { Color3.new(1,1,1), 1 },
+			offScreenArrowSize = 15,
+			offScreenArrowRadius = 150,
+			offScreenArrowOutline = true,
+			offScreenArrowOutlineColor = { Color3.new(), 1 },
+			chams = false,
+			chamsVisibleOnly = false,
+			chamsFillColor = { Color3.new(0.2, 0.2, 0.2), 0.5 },
+			chamsOutlineColor = { Color3.new(0,1,0), 0 },
+			hideresp = false,
+			killeresp = false
+		}
 	}
 }
 
 function EspInterface.AddInstance(instance, options)
-	local cache = EspInterface._objectCache;
+	local cache = EspInterface._objectCache
 	if cache[instance] then
-		warn("Instance handler already exists.");
+		warn("Instance handler already exists.")
 	else
-		cache[instance] = { InstanceObject.new(instance, options) };
+		cache[instance] = { InstanceObject.new(instance, options) }
 	end
-	return cache[instance][1];
+	return cache[instance][1]
 end
 
 function EspInterface.Load()
-	assert(not EspInterface._hasLoaded, "Esp has already been loaded.");
+	assert(not EspInterface._hasLoaded, "Esp has already been loaded.")
 
 	local function createObject(player)
 		EspInterface._objectCache[player] = {
 			EspObject.new(player, EspInterface),
 			ChamObject.new(player, EspInterface)
-		};
+		}
 	end
 
 	local function removeObject(player)
-		local object = EspInterface._objectCache[player];
+		local object = EspInterface._objectCache[player]
 		if object then
 			for i = 1, #object do
-				object[i]:Destruct();
+				object[i]:Destruct()
 			end
-			EspInterface._objectCache[player] = nil;
+			EspInterface._objectCache[player] = nil
 		end
 	end
 
-	local plrs = players:GetPlayers();
+	local plrs = players:GetPlayers()
 	for i = 2, #plrs do
-		createObject(plrs[i]);
+		createObject(plrs[i])
 	end
 
-	EspInterface.playerAdded = players.PlayerAdded:Connect(createObject);
-	EspInterface.playerRemoving = players.PlayerRemoving:Connect(removeObject);
-	EspInterface._hasLoaded = true;
+	EspInterface.playerAdded = players.PlayerAdded:Connect(createObject)
+	EspInterface.playerRemoving = players.PlayerRemoving:Connect(removeObject)
+	EspInterface._hasLoaded = true
 end
 
 function EspInterface.Unload()
