@@ -1,13 +1,13 @@
 -- services
-local runService = game:GetService("RunService")
-local players = game:GetService("Players")
-local workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
 
 -- variables
-local localPlayer = players.LocalPlayer
-local camera = workspace.CurrentCamera
-local viewportSize = camera.ViewportSize
-local container = Instance.new("Folder", gethui and gethui() or game:GetService("CoreGui"))
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+local ViewportSize = Camera.ViewportSize
+local Container = Instance.new("Folder", gethui and gethui() or game:GetService("CoreGui"))
 
 -- locals
 local floor = math.floor
@@ -21,12 +21,12 @@ local create = table.create
 local fromMatrix = CFrame.fromMatrix
 
 -- methods
-local wtvp = camera.WorldToViewportPoint
-local isA = workspace.IsA
-local getPivot = workspace.GetPivot
-local findFirstChild = workspace.FindFirstChild
-local findFirstChildOfClass = workspace.FindFirstChildOfClass
-local getChildren = workspace.GetChildren
+local wtvp = Camera.WorldToViewportPoint
+local isA = Workspace.IsA
+local getPivot = Workspace.GetPivot
+local findFirstChild = Workspace.FindFirstChild
+local findFirstChildOfClass = Workspace.FindFirstChildOfClass
+local getChildren = Workspace.GetChildren
 local toOrientation = CFrame.identity.ToOrientation
 local pointToObjectSpace = CFrame.identity.PointToObjectSpace
 local lerpColor = Color3.new().Lerp
@@ -59,6 +59,7 @@ local function isBodyPart(name)
 end
 
 local function getBoundingBox(instance)
+	if not instance then return CFrame.new(), Vector3.new(2, 2, 2) end
 	if instance:IsA("Model") then
 		local parts = {}
 		for _, part in ipairs(instance:GetDescendants()) do
@@ -87,7 +88,7 @@ local function getBoundingBox(instance)
 end
 
 local function worldToScreen(world)
-	local screen, inBounds = wtvp(camera, world)
+	local screen, inBounds = wtvp(Camera, world)
 	return Vector2.new(screen.X, screen.Y), inBounds, screen.Z
 end
 
@@ -96,7 +97,7 @@ local function calculateCorners(cframe, size)
 	for i = 1, #VERTICES do
 		corners[i] = worldToScreen((cframe + size*0.5*VERTICES[i]).Position)
 	end
-	local min = min2(viewportSize, unpack(corners))
+	local min = min2(ViewportSize, unpack(corners))
 	local max = max2(Vector2.zero, unpack(corners))
 	return {
 		corners = corners,
@@ -114,8 +115,9 @@ local function rotateVector(vector, radians)
 end
 
 local function parseColor(self, color, isOutline)
+	if not color then return Color3.new(1, 1, 1) end
 	if color == "Team Color" or (self.interface.sharedSettings.useTeamColor and not isOutline) then
-		return self.interface.getTeamColor(self.instance) or Color3.new(1,1,1)
+		return self.interface.getTeamColor(self.instance) or Color3.new(1, 1, 1)
 	end
 	return color
 end
@@ -124,10 +126,11 @@ end
 local EspObject = {}
 EspObject.__index = EspObject
 
-function EspObject.new(instance, interface)
+function EspObject.new(instance, interface, type)
 	local self = setmetatable({}, EspObject)
 	self.instance = assert(instance, "Missing argument #1 (Instance expected)")
 	self.interface = assert(interface, "Missing argument #2 (table expected)")
+	self.type = assert(type, "Missing argument #3 (Type expected)")
 	self:Construct()
 	return self
 end
@@ -186,7 +189,7 @@ function EspObject:Construct()
 			arrow = self:_create("Triangle", { Filled = true, Visible = false })
 		}
 	}
-	self.renderConnection = runService.Heartbeat:Connect(function(deltaTime)
+	self.renderConnection = RunService.Heartbeat:Connect(function(deltaTime)
 		self:Update(deltaTime)
 		self:Render(deltaTime)
 	end)
@@ -200,9 +203,14 @@ function EspObject:Destruct()
 	clear(self)
 end
 
-function EspObject:Update()
+function EspObject:Update(deltaTime)
 	local interface = self.interface
 	local settings = interface.settings[self.type] or interface.teamSettings[interface.isFriendly(self.instance) and "friendly" or "enemy"]
+	if not settings then
+		print("Warning: No settings for type", self.type)
+		self.enabled = false
+		return
+	end
 	self.options = settings
 	self.character = interface.getCharacter(self.instance)
 	self.health, self.maxHealth = interface.getHealth(self.instance)
@@ -228,14 +236,14 @@ function EspObject:Update()
 	if self.onScreen then
 		self.corners = calculateCorners(cframe, size)
 	else
-		local camCframe = camera.CFrame
+		local camCframe = Camera.CFrame
 		local flat = fromMatrix(camCframe.Position, camCframe.RightVector, Vector3.yAxis)
 		local objectSpace = pointToObjectSpace(flat, cframe.Position)
 		self.direction = Vector2.new(objectSpace.X, objectSpace.Z).Unit
 	end
 end
 
-function EspObject:Render()
+function EspObject:Render(deltaTime)
 	local onScreen = self.onScreen or false
 	local enabled = self.enabled or false
 	local visible = self.drawings.visible
@@ -346,9 +354,9 @@ function EspObject:Render()
 		tracer.Color = parseColor(self, options.tracerColor[1])
 		tracer.Transparency = options.tracerColor[2]
 		tracer.To = (corners.bottomLeft + corners.bottomRight)*0.5
-		tracer.From = options.tracerOrigin == "Middle" and viewportSize*0.5 or
-		              options.tracerOrigin == "Top" and viewportSize*Vector2.new(0.5, 0) or
-		              options.tracerOrigin == "Bottom" and viewportSize*Vector2.new(0.5, 1)
+		tracer.From = options.tracerOrigin == "Middle" and ViewportSize*0.5 or
+		              options.tracerOrigin == "Top" and ViewportSize*Vector2.new(0.5, 0) or
+		              options.tracerOrigin == "Bottom" and ViewportSize*Vector2.new(0.5, 1)
 		local tracerOutline = visible.tracerOutline
 		tracerOutline.Color = parseColor(self, options.tracerOutlineColor[1], true)
 		tracerOutline.Transparency = options.tracerOutlineColor[2]
@@ -360,7 +368,7 @@ function EspObject:Render()
 	hidden.arrowOutline.Visible = hidden.arrow.Visible and options.offScreenArrowOutline
 	if hidden.arrow.Visible and self.direction then
 		local arrow = hidden.arrow
-		arrow.PointA = min2(max2(viewportSize*0.5 + self.direction*options.offScreenArrowRadius, Vector2.one*25), viewportSize - Vector2.one*25)
+		arrow.PointA = min2(max2(ViewportSize*0.5 + self.direction*options.offScreenArrowRadius, Vector2.one*25), ViewportSize - Vector2.one*25)
 		arrow.PointB = arrow.PointA - rotateVector(self.direction, 0.45)*options.offScreenArrowSize
 		arrow.PointC = arrow.PointA - rotateVector(self.direction, -0.45)*options.offScreenArrowSize
 		arrow.Color = parseColor(self, options.offScreenArrowColor[1])
@@ -400,17 +408,18 @@ end
 local ChamObject = {}
 ChamObject.__index = ChamObject
 
-function ChamObject.new(instance, interface)
+function ChamObject.new(instance, interface, type)
 	local self = setmetatable({}, ChamObject)
 	self.instance = assert(instance, "Missing argument #1 (Instance expected)")
 	self.interface = assert(interface, "Missing argument #2 (table expected)")
+	self.type = assert(type, "Missing argument #3 (Type expected)")
 	self:Construct()
 	return self
 end
 
 function ChamObject:Construct()
-	self.highlight = Instance.new("Highlight", container)
-	self.updateConnection = runService.Heartbeat:Connect(function()
+	self.highlight = Instance.new("Highlight", Container)
+	self.updateConnection = RunService.Heartbeat:Connect(function()
 		self:Update()
 	end)
 end
@@ -426,6 +435,11 @@ function ChamObject:Update()
 	local interface = self.interface
 	local character = interface.getCharacter(self.instance)
 	local settings = interface.settings[self.type] or interface.teamSettings[interface.isFriendly(self.instance) and "friendly" or "enemy"]
+	if not settings then
+		print("Warning: No settings for type", self.type)
+		highlight.Enabled = false
+		return
+	end
 	local enabled = settings.enabled and character and not
 		(#interface.whitelist > 0 and not find(interface.whitelist, self.instance.UserId or 0))
 
@@ -567,17 +581,20 @@ local EspInterface = {
 function EspInterface.AddInstance(instance, type)
 	local cache = EspInterface._objectCache
 	if cache[instance] then
-		warn("Instance handler already exists.")
-	else
-		cache[instance] = {EspObject.new(instance, EspInterface), ChamObject.new(instance, EspInterface)}
-		cache[instance][1].type = type
-		cache[instance][2].type = type
+		warn("Instance handler already exists for", instance.Name)
+		return cache[instance][1]
 	end
+	if not EspInterface.settings[type] and type ~= "player" then
+		warn("Invalid type", type)
+		return
+	end
+	cache[instance] = {EspObject.new(instance, EspInterface, type), ChamObject.new(instance, EspInterface, type)}
 	return cache[instance][1]
 end
 
 function EspInterface.Load()
 	assert(not EspInterface._hasLoaded, "Esp has already been loaded.")
+	print("Loading ESP for objects...")
 
 	local objects = {
 		berry = {path = "harvest"},
@@ -595,15 +612,15 @@ function EspInterface.Load()
 	}
 
 	local function createObject(instance, type)
-		if type == "player" and instance == localPlayer then return end
-		EspInterface._objectCache[instance] = {EspObject.new(instance, EspInterface), ChamObject.new(instance, EspInterface)}
-		EspInterface._objectCache[instance][1].type = type
-		EspInterface._objectCache[instance][2].type = type
+		if type == "player" and instance == LocalPlayer then return end
+		print("Creating ESP for", instance.Name, "type:", type)
+		EspInterface.AddInstance(instance, type)
 	end
 
 	local function removeObject(instance)
 		local object = EspInterface._objectCache[instance]
 		if object then
+			print("Removing ESP for", instance.Name)
 			for i = 1, #object do
 				object[i]:Destruct()
 			end
@@ -613,33 +630,35 @@ function EspInterface.Load()
 
 	for name, data in pairs(objects) do
 		if name ~= "player" and name ~= "scp" then
-			local folder = workspace:FindFirstChild(data.path)
+			local folder = Workspace:FindFirstChild(data.path)
 			if folder then
 				for _, instance in ipairs(folder:GetChildren()) do
 					if instance.Name == name then
 						createObject(instance, name)
 					end
 				end
+			else
+				print("Warning: Folder", data.path, "not found for", name)
 			end
 		end
 	end
 
-	local plrs = players:GetPlayers()
+	local plrs = Players:GetPlayers()
 	for i = 2, #plrs do
 		createObject(plrs[i], "player")
 	end
 
-	local scps = workspace:FindFirstChild("scps")
+	local scps = Workspace:FindFirstChild("scps")
 	if scps then
 		for _, scp in ipairs(scps:GetChildren()) do
 			createObject(scp, "scp")
 		end
 	end
 
-	EspInterface.playerAdded = players.PlayerAdded:Connect(function(player)
+	EspInterface.playerAdded = Players.PlayerAdded:Connect(function(player)
 		createObject(player, "player")
 	end)
-	EspInterface.playerRemoving = players.PlayerRemoving:Connect(removeObject)
+	EspInterface.playerRemoving = Players.PlayerRemoving:Connect(removeObject)
 	if scps then
 		EspInterface.scpAdded = scps.ChildAdded:Connect(function(scp)
 			createObject(scp, "scp")
@@ -648,10 +667,12 @@ function EspInterface.Load()
 	end
 
 	EspInterface._hasLoaded = true
+	print("ESP loaded successfully")
 end
 
 function EspInterface.Unload()
 	assert(EspInterface._hasLoaded, "Esp has not been loaded yet.")
+	print("Unloading ESP...")
 
 	for index, object in next, EspInterface._objectCache do
 		for i = 1, #object do
@@ -665,6 +686,7 @@ function EspInterface.Unload()
 	if EspInterface.scpAdded then EspInterface.scpAdded:Disconnect() end
 	if EspInterface.scpRemoving then EspInterface.scpRemoving:Disconnect() end
 	EspInterface._hasLoaded = false
+	print("ESP unloaded successfully")
 end
 
 function EspInterface.getWeapon(instance)
@@ -672,7 +694,7 @@ function EspInterface.getWeapon(instance)
 end
 
 function EspInterface.isFriendly(instance)
-	return instance:IsA("Player") and instance.Team and instance.Team == localPlayer.Team or false
+	return instance:IsA("Player") and instance.Team and instance.Team == LocalPlayer.Team or false
 end
 
 function EspInterface.getTeamColor(instance)
