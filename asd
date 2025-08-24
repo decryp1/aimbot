@@ -59,7 +59,7 @@ local function isBodyPart(name)
 end
 
 local function getBoundingBox(instance)
-	if not instance then return CFrame.new(), Vector3.new(2, 2, 2) end
+	if not instance or not isA(instance, "Instance") then return CFrame.new(), Vector3.new(2, 2, 2) end
 	if instance:IsA("Model") then
 		local parts = {}
 		for _, part in ipairs(instance:GetDescendants()) do
@@ -93,6 +93,7 @@ local function worldToScreen(world)
 end
 
 local function calculateCorners(cframe, size)
+	if not cframe or not size then return nil end
 	local corners = create(#VERTICES)
 	for i = 1, #VERTICES do
 		corners[i] = worldToScreen((cframe + size*0.5*VERTICES[i]).Position)
@@ -136,7 +137,11 @@ function EspObject.new(instance, interface, type)
 end
 
 function EspObject:_create(class, properties)
-	local drawing = Drawing.new(class)
+	local success, drawing = pcall(function() return Drawing.new(class) end)
+	if not success or not drawing then
+		print("Failed to create", class, "drawing for", self.instance.Name)
+		return nil
+	end
 	for property, value in next, properties do
 		pcall(function() drawing[property] = value end)
 	end
@@ -151,42 +156,42 @@ function EspObject:Construct()
 	self.drawings = {
 		box3d = {
 			{
-				self:_create("Line", { Thickness = 1, Visible = false }),
-				self:_create("Line", { Thickness = 1, Visible = false }),
-				self:_create("Line", { Thickness = 1, Visible = false })
+				self:_create("Line", { Thickness = 1, Visible = false }) or {},
+				self:_create("Line", { Thickness = 1, Visible = false }) or {},
+				self:_create("Line", { Thickness = 1, Visible = false }) or {}
 			},
 			{
-				self:_create("Line", { Thickness = 1, Visible = false }),
-				self:_create("Line", { Thickness = 1, Visible = false }),
-				self:_create("Line", { Thickness = 1, Visible = false })
+				self:_create("Line", { Thickness = 1, Visible = false }) or {},
+				self:_create("Line", { Thickness = 1, Visible = false }) or {},
+				self:_create("Line", { Thickness = 1, Visible = false }) or {}
 			},
 			{
-				self:_create("Line", { Thickness = 1, Visible = false }),
-				self:_create("Line", { Thickness = 1, Visible = false }),
-				self:_create("Line", { Thickness = 1, Visible = false })
+				self:_create("Line", { Thickness = 1, Visible = false }) or {},
+				self:_create("Line", { Thickness = 1, Visible = false }) or {},
+				self:_create("Line", { Thickness = 1, Visible = false }) or {}
 			},
 			{
-				self:_create("Line", { Thickness = 1, Visible = false }),
-				self:_create("Line", { Thickness = 1, Visible = false }),
-				self:_create("Line", { Thickness = 1, Visible = false })
+				self:_create("Line", { Thickness = 1, Visible = false }) or {},
+				self:_create("Line", { Thickness = 1, Visible = false }) or {},
+				self:_create("Line", { Thickness = 1, Visible = false }) or {}
 			}
 		},
 		visible = {
-			tracerOutline = self:_create("Line", { Thickness = 3, Visible = false }),
-			tracer = self:_create("Line", { Thickness = 1, Visible = false }),
-			boxFill = self:_create("Square", { Filled = true, Visible = false }),
-			boxOutline = self:_create("Square", { Thickness = 3, Visible = false }),
-			box = self:_create("Square", { Thickness = 1, Visible = false }),
-			healthBarOutline = self:_create("Line", { Thickness = 3, Visible = false }),
-			healthBar = self:_create("Line", { Thickness = 1, Visible = false }),
-			healthText = self:_create("Text", { Center = true, Visible = false }),
-			name = self:_create("Text", { Text = self.interface.getName(self.instance), Center = true, Visible = false }),
-			distance = self:_create("Text", { Center = true, Visible = false }),
-			weapon = self:_create("Text", { Center = true, Visible = false }),
+			tracerOutline = self:_create("Line", { Thickness = 3, Visible = false }) or {},
+			tracer = self:_create("Line", { Thickness = 1, Visible = false }) or {},
+			boxFill = self:_create("Square", { Filled = true, Visible = false }) or {},
+			boxOutline = self:_create("Square", { Thickness = 3, Visible = false }) or {},
+			box = self:_create("Square", { Thickness = 1, Visible = false }) or {},
+			healthBarOutline = self:_create("Line", { Thickness = 3, Visible = false }) or {},
+			healthBar = self:_create("Line", { Thickness = 1, Visible = false }) or {},
+			healthText = self:_create("Text", { Center = true, Visible = false }) or {},
+			name = self:_create("Text", { Text = self.interface.getName(self.instance), Center = true, Visible = false }) or {},
+			distance = self:_create("Text", { Center = true, Visible = false }) or {},
+			weapon = self:_create("Text", { Center = true, Visible = false }) or {},
 		},
 		hidden = {
-			arrowOutline = self:_create("Triangle", { Thickness = 3, Visible = false }),
-			arrow = self:_create("Triangle", { Filled = true, Visible = false })
+			arrowOutline = self:_create("Triangle", { Thickness = 3, Visible = false }) or {},
+			arrow = self:_create("Triangle", { Filled = true, Visible = false }) or {}
 		}
 	}
 	self.renderConnection = RunService.Heartbeat:Connect(function(deltaTime)
@@ -198,7 +203,7 @@ end
 function EspObject:Destruct()
 	self.renderConnection:Disconnect()
 	for i = 1, #self.bin do
-		self.bin[i]:Remove()
+		if self.bin[i] then self.bin[i]:Remove() end
 	end
 	clear(self)
 end
@@ -213,6 +218,10 @@ function EspObject:Update(deltaTime)
 	end
 	self.options = settings
 	self.character = interface.getCharacter(self.instance)
+	if not self.character then
+		self.enabled = false
+		return
+	end
 	self.health, self.maxHealth = interface.getHealth(self.instance)
 	self.weapon = interface.getWeapon(self.instance)
 	self.enabled = settings.enabled and self.character and not
@@ -251,6 +260,11 @@ function EspObject:Render(deltaTime)
 	local box3d = self.drawings.box3d
 	local options = self.options
 	local corners = self.corners
+
+	if not corners or not corners.corners then
+		print("Warning: Invalid corners for", self.instance.Name)
+		return
+	end
 
 	visible.box.Visible = enabled and onScreen and options.box
 	visible.boxOutline.Visible = visible.box.Visible and options.boxOutline
@@ -382,24 +396,34 @@ function EspObject:Render(deltaTime)
 	end
 
 	local box3dEnabled = enabled and onScreen and options.box3d
-	for i = 1, #box3d do
-		local face = box3d[i]
-		for i2 = 1, #face do
-			local line = face[i2]
-			line.Visible = box3dEnabled
-			line.Color = parseColor(self, options.box3dColor[1])
-			line.Transparency = options.box3dColor[2]
-		end
-		if box3dEnabled then
-			local line1 = face[1]
-			line1.From = corners.corners[i]
-			line1.To = corners.corners[i == 4 and 1 or i+1]
-			local line2 = face[2]
-			line2.From = corners.corners[i == 4 and 1 or i+1]
-			line2.To = corners.corners[i == 4 and 5 or i+5]
-			local line3 = face[3]
-			line3.From = corners.corners[i == 4 and 5 or i+5]
-			line3.To = corners.corners[i == 4 and 8 or i+4]
+	if box3dEnabled and corners and corners.corners then
+		for i = 1, #box3d do
+			local face = box3d[i]
+			for i2 = 1, #face do
+				local line = face[i2]
+				if line and line.Visible ~= nil then
+					line.Visible = box3dEnabled
+					line.Color = parseColor(self, options.box3dColor[1])
+					line.Transparency = options.box3dColor[2]
+				end
+			end
+			if box3dEnabled then
+				local line1 = face[1]
+				if line1 and line1.From and line1.To then
+					line1.From = corners.corners[i]
+					line1.To = corners.corners[i == 4 and 1 or i+1]
+				end
+				local line2 = face[2]
+				if line2 and line2.From and line2.To then
+					line2.From = corners.corners[i == 4 and 1 or i+1]
+					line2.To = corners.corners[i == 4 and 5 or i+5]
+				end
+				local line3 = face[3]
+				if line3 and line3.From and line3.To then
+					line3.From = corners.corners[i == 4 and 5 or i+5]
+					line3.To = corners.corners[i == 4 and 8 or i+4]
+				end
+			end
 		end
 	end
 end
