@@ -68,7 +68,8 @@ local function getBoundingBox(instance)
 			end
 		end
 		if #parts == 0 then
-			return getPivot(instance), instance:GetExtentsSize() or Vector3.new(2, 2, 2)
+			local pivot = getPivot(instance)
+			return pivot, instance:GetExtentsSize() or Vector3.new(2, 2, 2)
 		end
 		local min, max
 		for i = 1, #parts do
@@ -83,20 +84,22 @@ local function getBoundingBox(instance)
 	elseif isA(instance, "BasePart") then
 		return instance.CFrame, instance.Size
 	else
-		return getPivot(instance), Vector3.new(2, 2, 2)
+		local pivot = getPivot(instance)
+		return pivot, Vector3.new(2, 2, 2)
 	end
 end
 
 local function worldToScreen(world)
-	local screen, inBounds = wtvp(Camera, world)
-	return Vector2.new(screen.X, screen.Y), inBounds, screen.Z
+	local screen, inBounds = pcall(wtvp, Camera, world)
+	return screen and Vector2.new(screen.X, screen.Y) or Vector2.new(0, 0), inBounds, screen and screen.Z or 0
 end
 
 local function calculateCorners(cframe, size)
 	if not cframe or not size then return nil end
 	local corners = create(#VERTICES)
 	for i = 1, #VERTICES do
-		corners[i] = worldToScreen((cframe + size*0.5*VERTICES[i]).Position)
+		local screen, _ = worldToScreen((cframe + size*0.5*VERTICES[i]).Position)
+		corners[i] = screen
 	end
 	local min = min2(ViewportSize, unpack(corners))
 	local max = max2(Vector2.zero, unpack(corners))
@@ -139,8 +142,8 @@ end
 function EspObject:_create(class, properties)
 	local success, drawing = pcall(function() return Drawing.new(class) end)
 	if not success or not drawing then
-		print("Failed to create", class, "drawing for", self.instance.Name)
-		return nil
+		print("Failed to create", class, "drawing for", self.instance.Name, "type:", self.type)
+		return {}
 	end
 	for property, value in next, properties do
 		pcall(function() drawing[property] = value end)
@@ -156,42 +159,42 @@ function EspObject:Construct()
 	self.drawings = {
 		box3d = {
 			{
-				self:_create("Line", { Thickness = 1, Visible = false }) or {},
-				self:_create("Line", { Thickness = 1, Visible = false }) or {},
-				self:_create("Line", { Thickness = 1, Visible = false }) or {}
+				self:_create("Line", { Thickness = 1, Visible = false }),
+				self:_create("Line", { Thickness = 1, Visible = false }),
+				self:_create("Line", { Thickness = 1, Visible = false })
 			},
 			{
-				self:_create("Line", { Thickness = 1, Visible = false }) or {},
-				self:_create("Line", { Thickness = 1, Visible = false }) or {},
-				self:_create("Line", { Thickness = 1, Visible = false }) or {}
+				self:_create("Line", { Thickness = 1, Visible = false }),
+				self:_create("Line", { Thickness = 1, Visible = false }),
+				self:_create("Line", { Thickness = 1, Visible = false })
 			},
 			{
-				self:_create("Line", { Thickness = 1, Visible = false }) or {},
-				self:_create("Line", { Thickness = 1, Visible = false }) or {},
-				self:_create("Line", { Thickness = 1, Visible = false }) or {}
+				self:_create("Line", { Thickness = 1, Visible = false }),
+				self:_create("Line", { Thickness = 1, Visible = false }),
+				self:_create("Line", { Thickness = 1, Visible = false })
 			},
 			{
-				self:_create("Line", { Thickness = 1, Visible = false }) or {},
-				self:_create("Line", { Thickness = 1, Visible = false }) or {},
-				self:_create("Line", { Thickness = 1, Visible = false }) or {}
+				self:_create("Line", { Thickness = 1, Visible = false }),
+				self:_create("Line", { Thickness = 1, Visible = false }),
+				self:_create("Line", { Thickness = 1, Visible = false })
 			}
 		},
 		visible = {
-			tracerOutline = self:_create("Line", { Thickness = 3, Visible = false }) or {},
-			tracer = self:_create("Line", { Thickness = 1, Visible = false }) or {},
-			boxFill = self:_create("Square", { Filled = true, Visible = false }) or {},
-			boxOutline = self:_create("Square", { Thickness = 3, Visible = false }) or {},
-			box = self:_create("Square", { Thickness = 1, Visible = false }) or {},
-			healthBarOutline = self:_create("Line", { Thickness = 3, Visible = false }) or {},
-			healthBar = self:_create("Line", { Thickness = 1, Visible = false }) or {},
-			healthText = self:_create("Text", { Center = true, Visible = false }) or {},
-			name = self:_create("Text", { Text = self.interface.getName(self.instance), Center = true, Visible = false }) or {},
-			distance = self:_create("Text", { Center = true, Visible = false }) or {},
-			weapon = self:_create("Text", { Center = true, Visible = false }) or {},
+			tracerOutline = self:_create("Line", { Thickness = 3, Visible = false }),
+			tracer = self:_create("Line", { Thickness = 1, Visible = false }),
+			boxFill = self:_create("Square", { Filled = true, Visible = false }),
+			boxOutline = self:_create("Square", { Thickness = 3, Visible = false }),
+			box = self:_create("Square", { Thickness = 1, Visible = false }),
+			healthBarOutline = self:_create("Line", { Thickness = 3, Visible = false }),
+			healthBar = self:_create("Line", { Thickness = 1, Visible = false }),
+			healthText = self:_create("Text", { Center = true, Visible = false }),
+			name = self:_create("Text", { Text = self.interface.getName(self.instance), Center = true, Visible = false }),
+			distance = self:_create("Text", { Center = true, Visible = false }),
+			weapon = self:_create("Text", { Center = true, Visible = false }),
 		},
 		hidden = {
-			arrowOutline = self:_create("Triangle", { Thickness = 3, Visible = false }) or {},
-			arrow = self:_create("Triangle", { Filled = true, Visible = false }) or {}
+			arrowOutline = self:_create("Triangle", { Thickness = 3, Visible = false }),
+			arrow = self:_create("Triangle", { Filled = true, Visible = false })
 		}
 	}
 	self.renderConnection = RunService.Heartbeat:Connect(function(deltaTime)
@@ -234,7 +237,7 @@ function EspObject:Update(deltaTime)
 	end
 
 	local cframe, size = getBoundingBox(self.character)
-	local _, onScreen, depth = worldToScreen(cframe.Position)
+	local screen, onScreen, depth = worldToScreen(cframe.Position)
 	self.onScreen = onScreen
 	self.distance = depth
 
@@ -258,55 +261,55 @@ function EspObject:Render(deltaTime)
 	local visible = self.drawings.visible
 	local hidden = self.drawings.hidden
 	local box3d = self.drawings.box3d
-	local options = self.options
+	local options = self.options or {}
 	local corners = self.corners
 
 	if not corners or not corners.corners then
-		print("Warning: Invalid corners for", self.instance.Name)
+		print("Warning: Invalid corners for", self.instance.Name, "type:", self.type)
 		return
 	end
 
-	visible.box.Visible = enabled and onScreen and options.box
-	visible.boxOutline.Visible = visible.box.Visible and options.boxOutline
+	visible.box.Visible = enabled and onScreen and (options.box or false)
+	visible.boxOutline.Visible = visible.box.Visible and (options.boxOutline or false)
 	if visible.box.Visible then
 		local box = visible.box
 		box.Position = corners.topLeft
 		box.Size = corners.bottomRight - corners.topLeft
-		box.Color = parseColor(self, options.boxColor[1])
-		box.Transparency = options.boxColor[2]
+		box.Color = parseColor(self, options.boxColor and options.boxColor[1] or Color3.new(1, 1, 1))
+		box.Transparency = options.boxColor and options.boxColor[2] or 1
 		local boxOutline = visible.boxOutline
 		boxOutline.Position = box.Position
 		boxOutline.Size = box.Size
-		boxOutline.Color = parseColor(self, options.boxOutlineColor[1], true)
-		boxOutline.Transparency = options.boxOutlineColor[2]
+		boxOutline.Color = parseColor(self, options.boxOutlineColor and options.boxOutlineColor[1] or Color3.new(), true)
+		boxOutline.Transparency = options.boxOutlineColor and options.boxOutlineColor[2] or 1
 	end
 
-	visible.boxFill.Visible = enabled and onScreen and options.boxFill
+	visible.boxFill.Visible = enabled and onScreen and (options.boxFill or false)
 	if visible.boxFill.Visible then
 		local boxFill = visible.boxFill
 		boxFill.Position = corners.topLeft
 		boxFill.Size = corners.bottomRight - corners.topLeft
-		boxFill.Color = parseColor(self, options.boxFillColor[1])
-		boxFill.Transparency = options.boxFillColor[2]
+		boxFill.Color = parseColor(self, options.boxFillColor and options.boxFillColor[1] or Color3.new(1, 1, 1))
+		boxFill.Transparency = options.boxFillColor and options.boxFillColor[2] or 0.5
 	end
 
-	visible.healthBar.Visible = enabled and onScreen and options.healthBar
-	visible.healthBarOutline.Visible = visible.healthBar.Visible and options.healthBarOutline
+	visible.healthBar.Visible = enabled and onScreen and (options.healthBar or false)
+	visible.healthBarOutline.Visible = visible.healthBar.Visible and (options.healthBarOutline or false)
 	if visible.healthBar.Visible then
 		local barFrom = corners.topLeft - HEALTH_BAR_OFFSET
 		local barTo = corners.bottomLeft - HEALTH_BAR_OFFSET
 		local healthBar = visible.healthBar
 		healthBar.To = barTo
 		healthBar.From = lerp2(barTo, barFrom, self.health/self.maxHealth)
-		healthBar.Color = lerpColor(options.dyingColor, options.healthyColor, self.health/self.maxHealth)
+		healthBar.Color = lerpColor(options.dyingColor or Color3.new(1, 0, 0), options.healthyColor or Color3.new(0, 1, 0), self.health/self.maxHealth)
 		local healthBarOutline = visible.healthBarOutline
 		healthBarOutline.To = barTo + HEALTH_BAR_OUTLINE_OFFSET
 		healthBarOutline.From = barFrom - HEALTH_BAR_OUTLINE_OFFSET
-		healthBarOutline.Color = parseColor(self, options.healthBarOutlineColor[1], true)
-		healthBarOutline.Transparency = options.healthBarOutlineColor[2]
+		healthBarOutline.Color = parseColor(self, options.healthBarOutlineColor and options.healthBarOutlineColor[1] or Color3.new(), true)
+		healthBarOutline.Transparency = options.healthBarOutlineColor and options.healthBarOutlineColor[2] or 0.5
 	end
 
-	visible.healthText.Visible = enabled and onScreen and options.healthText
+	visible.healthText.Visible = enabled and onScreen and (options.healthText or false)
 	if visible.healthText.Visible then
 		local barFrom = corners.topLeft - HEALTH_BAR_OFFSET
 		local barTo = corners.bottomLeft - HEALTH_BAR_OFFSET
@@ -314,88 +317,88 @@ function EspObject:Render(deltaTime)
 		healthText.Text = round(self.health) .. "hp"
 		healthText.Size = self.interface.sharedSettings.textSize
 		healthText.Font = self.interface.sharedSettings.textFont
-		healthText.Color = parseColor(self, options.healthTextColor[1])
-		healthText.Transparency = options.healthTextColor[2]
-		healthText.Outline = options.healthTextOutline
-		healthText.OutlineColor = parseColor(self, options.healthTextOutlineColor, true)
+		healthText.Color = parseColor(self, options.healthTextColor and options.healthTextColor[1] or Color3.new(1, 1, 1))
+		healthText.Transparency = options.healthTextColor and options.healthTextColor[2] or 1
+		healthText.Outline = options.healthTextOutline or false
+		healthText.OutlineColor = parseColor(self, options.healthTextOutlineColor or Color3.new(), true)
 		healthText.Position = lerp2(barTo, barFrom, self.health/self.maxHealth) - healthText.TextBounds*0.5 - HEALTH_TEXT_OFFSET
 	end
 
-	visible.name.Visible = enabled and onScreen and options.name
+	visible.name.Visible = enabled and onScreen and (options.name or false)
 	if visible.name.Visible then
 		local name = visible.name
 		name.Text = self.interface.getName(self.instance)
 		name.Size = self.interface.sharedSettings.textSize
 		name.Font = self.interface.sharedSettings.textFont
-		name.Color = parseColor(self, options.nameColor[1])
-		name.Transparency = self.interface.sharedSettings.nameTransparency or options.nameColor[2]
-		name.Outline = options.nameOutline
-		name.OutlineColor = parseColor(self, options.nameOutlineColor, true)
+		name.Color = parseColor(self, options.nameColor and options.nameColor[1] or Color3.new(1, 1, 1))
+		name.Transparency = self.interface.sharedSettings.nameTransparency or (options.nameColor and options.nameColor[2] or 1)
+		name.Outline = options.nameOutline or false
+		name.OutlineColor = parseColor(self, options.nameOutlineColor or Color3.new(), true)
 		name.Position = (corners.topLeft + corners.topRight)*0.5 - Vector2.yAxis*name.TextBounds.Y - NAME_OFFSET
 	end
 
-	visible.distance.Visible = enabled and onScreen and self.distance and options.distance
+	visible.distance.Visible = enabled and onScreen and self.distance and (options.distance or false)
 	if visible.distance.Visible then
 		local distance = visible.distance
 		distance.Text = round(self.distance) .. " studs"
 		distance.Size = self.interface.sharedSettings.textSize
 		distance.Font = self.interface.sharedSettings.textFont
-		distance.Color = parseColor(self, options.distanceColor[1])
-		distance.Transparency = options.distanceColor[2]
-		distance.Outline = options.distanceOutline
-		distance.OutlineColor = parseColor(self, options.distanceOutlineColor, true)
+		distance.Color = parseColor(self, options.distanceColor and options.distanceColor[1] or Color3.new(1, 1, 1))
+		distance.Transparency = options.distanceColor and options.distanceColor[2] or 1
+		distance.Outline = options.distanceOutline or false
+		distance.OutlineColor = parseColor(self, options.distanceOutlineColor or Color3.new(), true)
 		distance.Position = (corners.bottomLeft + corners.bottomRight)*0.5 + DISTANCE_OFFSET
 	end
 
-	visible.weapon.Visible = enabled and onScreen and options.weapon
+	visible.weapon.Visible = enabled and onScreen and (options.weapon or false)
 	if visible.weapon.Visible then
 		local weapon = visible.weapon
 		weapon.Text = self.weapon
 		weapon.Size = self.interface.sharedSettings.textSize
 		weapon.Font = self.interface.sharedSettings.textFont
-		weapon.Color = parseColor(self, options.weaponColor[1])
-		weapon.Transparency = options.weaponColor[2]
-		weapon.Outline = options.weaponOutline
-		weapon.OutlineColor = parseColor(self, options.weaponOutlineColor, true)
+		weapon.Color = parseColor(self, options.weaponColor and options.weaponColor[1] or Color3.new(1, 1, 1))
+		weapon.Transparency = options.weaponColor and options.weaponColor[2] or 1
+		weapon.Outline = options.weaponOutline or false
+		weapon.OutlineColor = parseColor(self, options.weaponOutlineColor or Color3.new(), true)
 		weapon.Position = (corners.bottomLeft + corners.bottomRight)*0.5 +
 			(visible.distance.Visible and DISTANCE_OFFSET + Vector2.yAxis*visible.distance.TextBounds.Y or Vector2.zero)
 	end
 
-	visible.tracer.Visible = enabled and onScreen and options.tracer
-	visible.tracerOutline.Visible = visible.tracer.Visible and options.tracerOutline
+	visible.tracer.Visible = enabled and onScreen and (options.tracer or false)
+	visible.tracerOutline.Visible = visible.tracer.Visible and (options.tracerOutline or false)
 	if visible.tracer.Visible then
 		local tracer = visible.tracer
-		tracer.Color = parseColor(self, options.tracerColor[1])
-		tracer.Transparency = options.tracerColor[2]
+		tracer.Color = parseColor(self, options.tracerColor and options.tracerColor[1] or Color3.new(1, 0, 0))
+		tracer.Transparency = options.tracerColor and options.tracerColor[2] or 1
 		tracer.To = (corners.bottomLeft + corners.bottomRight)*0.5
 		tracer.From = options.tracerOrigin == "Middle" and ViewportSize*0.5 or
 		              options.tracerOrigin == "Top" and ViewportSize*Vector2.new(0.5, 0) or
 		              options.tracerOrigin == "Bottom" and ViewportSize*Vector2.new(0.5, 1)
 		local tracerOutline = visible.tracerOutline
-		tracerOutline.Color = parseColor(self, options.tracerOutlineColor[1], true)
-		tracerOutline.Transparency = options.tracerOutlineColor[2]
+		tracerOutline.Color = parseColor(self, options.tracerOutlineColor and options.tracerOutlineColor[1] or Color3.new(), true)
+		tracerOutline.Transparency = options.tracerOutlineColor and options.tracerOutlineColor[2] or 1
 		tracerOutline.To = tracer.To
 		tracerOutline.From = tracer.From
 	end
 
-	hidden.arrow.Visible = enabled and (not onScreen) and options.offScreenArrow
-	hidden.arrowOutline.Visible = hidden.arrow.Visible and options.offScreenArrowOutline
+	hidden.arrow.Visible = enabled and (not onScreen) and (options.offScreenArrow or false)
+	hidden.arrowOutline.Visible = hidden.arrow.Visible and (options.offScreenArrowOutline or false)
 	if hidden.arrow.Visible and self.direction then
 		local arrow = hidden.arrow
 		arrow.PointA = min2(max2(ViewportSize*0.5 + self.direction*options.offScreenArrowRadius, Vector2.one*25), ViewportSize - Vector2.one*25)
 		arrow.PointB = arrow.PointA - rotateVector(self.direction, 0.45)*options.offScreenArrowSize
 		arrow.PointC = arrow.PointA - rotateVector(self.direction, -0.45)*options.offScreenArrowSize
-		arrow.Color = parseColor(self, options.offScreenArrowColor[1])
-		arrow.Transparency = options.offScreenArrowColor[2]
+		arrow.Color = parseColor(self, options.offScreenArrowColor and options.offScreenArrowColor[1] or Color3.new(1, 1, 1))
+		arrow.Transparency = options.offScreenArrowColor and options.offScreenArrowColor[2] or 1
 		local arrowOutline = hidden.arrowOutline
 		arrowOutline.PointA = arrow.PointA
 		arrowOutline.PointB = arrow.PointB
 		arrowOutline.PointC = arrow.PointC
-		arrowOutline.Color = parseColor(self, options.offScreenArrowOutlineColor[1], true)
-		arrowOutline.Transparency = options.offScreenArrowOutlineColor[2]
+		arrowOutline.Color = parseColor(self, options.offScreenArrowOutlineColor and options.offScreenArrowOutlineColor[1] or Color3.new(), true)
+		arrowOutline.Transparency = options.offScreenArrowOutlineColor and options.offScreenArrowOutlineColor[2] or 1
 	end
 
-	local box3dEnabled = enabled and onScreen and options.box3d
+	local box3dEnabled = enabled and onScreen and (options.box3d or false)
 	if box3dEnabled and corners and corners.corners then
 		for i = 1, #box3d do
 			local face = box3d[i]
@@ -403,25 +406,25 @@ function EspObject:Render(deltaTime)
 				local line = face[i2]
 				if line and line.Visible ~= nil then
 					line.Visible = box3dEnabled
-					line.Color = parseColor(self, options.box3dColor[1])
-					line.Transparency = options.box3dColor[2]
+					line.Color = parseColor(self, options.box3dColor and options.box3dColor[1] or Color3.new(1, 0, 0))
+					line.Transparency = options.box3dColor and options.box3dColor[2] or 1
 				end
 			end
-			if box3dEnabled then
+			if box3dEnabled and face[1] and face[2] and face[3] then
 				local line1 = face[1]
-				if line1 and line1.From and line1.To then
-					line1.From = corners.corners[i]
-					line1.To = corners.corners[i == 4 and 1 or i+1]
+				if line1.From and line1.To then
+					line1.From = corners.corners[i] or Vector2.new(0, 0)
+					line1.To = corners.corners[i == 4 and 1 or i+1] or Vector2.new(0, 0)
 				end
 				local line2 = face[2]
-				if line2 and line2.From and line2.To then
-					line2.From = corners.corners[i == 4 and 1 or i+1]
-					line2.To = corners.corners[i == 4 and 5 or i+5]
+				if line2.From and line2.To then
+					line2.From = corners.corners[i == 4 and 1 or i+1] or Vector2.new(0, 0)
+					line2.To = corners.corners[i == 4 and 5 or i+5] or Vector2.new(0, 0)
 				end
 				local line3 = face[3]
-				if line3 and line3.From and line3.To then
-					line3.From = corners.corners[i == 4 and 5 or i+5]
-					line3.To = corners.corners[i == 4 and 8 or i+4]
+				if line3.From and line3.To then
+					line3.From = corners.corners[i == 4 and 5 or i+5] or Vector2.new(0, 0)
+					line3.To = corners.corners[i == 4 and 8 or i+4] or Vector2.new(0, 0)
 				end
 			end
 		end
@@ -467,14 +470,14 @@ function ChamObject:Update()
 	local enabled = settings.enabled and character and not
 		(#interface.whitelist > 0 and not find(interface.whitelist, self.instance.UserId or 0))
 
-	highlight.Enabled = enabled and settings.chams
+	highlight.Enabled = enabled and (settings.chams or false)
 	if highlight.Enabled then
 		highlight.Adornee = character
-		highlight.FillColor = parseColor(self, settings.chamsFillColor[1])
-		highlight.FillTransparency = settings.chamsFillColor[2]
-		highlight.OutlineColor = parseColor(self, settings.chamsOutlineColor[1], true)
-		highlight.OutlineTransparency = settings.chamsOutlineColor[2]
-		highlight.DepthMode = settings.chamsVisibleOnly and "Occluded" or "AlwaysOnTop"
+		highlight.FillColor = parseColor(self, settings.chamsFillColor and settings.chamsFillColor[1] or Color3.new(0.2, 0.2, 0.2))
+		highlight.FillTransparency = settings.chamsFillColor and settings.chamsFillColor[2] or 0.5
+		highlight.OutlineColor = parseColor(self, settings.chamsOutlineColor and settings.chamsOutlineColor[1] or Color3.new(1, 0, 0), true)
+		highlight.OutlineTransparency = settings.chamsOutlineColor and settings.chamsOutlineColor[2] or 0
+		highlight.DepthMode = (settings.chamsVisibleOnly or false) and "Occluded" or "AlwaysOnTop"
 	end
 end
 
@@ -486,7 +489,7 @@ local EspInterface = {
 	sharedSettings = {
 		textSize = 13,
 		textFont = 2,
-		limitDistance = false,
+		limitDistance = false, -- Temporarily disable to test mammoth/scp
 		maxDistance = 150,
 		useTeamColor = false,
 		nameTransparency = 1
@@ -588,17 +591,17 @@ local EspInterface = {
 		}
 	},
 	settings = {
-		berry = {enabled = false, box = false, boxColor = {Color3.new(0,1,0), 1}, name = false, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = false, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
-		bush = {enabled = false, box = false, boxColor = {Color3.new(0,1,0), 1}, name = false, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = false, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
-		flax = {enabled = false, box = false, boxColor = {Color3.new(0,1,0), 1}, name = false, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = false, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
-		flower = {enabled = false, box = false, boxColor = {Color3.new(0,1,0), 1}, name = false, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = false, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
-		pebbles = {enabled = false, box = false, boxColor = {Color3.new(0,1,0), 1}, name = false, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = false, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
-		carrot = {enabled = false, box = false, boxColor = {Color3.new(0,1,0), 1}, name = false, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = false, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
-		ghost1 = {enabled = false, box = false, boxColor = {Color3.new(0,1,0), 1}, name = false, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = false, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
-		glass = {enabled = false, box = false, boxColor = {Color3.new(0,1,0), 1}, name = false, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = false, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
-		deer = {enabled = false, box = false, boxColor = {Color3.new(0,1,0), 1}, name = false, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), healthText = false, healthTextColor = {Color3.new(0,1,0), 1}, healthTextOutline = true, healthTextOutlineColor = Color3.new(), tracer = false, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
-		mammoth = {enabled = false, box = false, boxColor = {Color3.new(0,1,0), 1}, name = false, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), healthText = false, healthTextColor = {Color3.new(0,1,0), 1}, healthTextOutline = true, healthTextOutlineColor = Color3.new(), tracer = false, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
-		scp = {enabled = false, box = false, boxColor = {Color3.new(0,1,0), 1}, name = false, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), healthText = false, healthTextColor = {Color3.new(0,1,0), 1}, healthTextOutline = true, healthTextOutlineColor = Color3.new(), tracer = false, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}}
+		berry = {enabled = false, box = true, boxColor = {Color3.new(0,1,0), 1}, name = true, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = true, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
+		bush = {enabled = false, box = true, boxColor = {Color3.new(0,1,0), 1}, name = true, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = true, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
+		flax = {enabled = false, box = true, boxColor = {Color3.new(0,1,0), 1}, name = true, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = true, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
+		flower = {enabled = false, box = true, boxColor = {Color3.new(0,1,0), 1}, name = true, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = true, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
+		pebbles = {enabled = false, box = true, boxColor = {Color3.new(0,1,0), 1}, name = true, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = true, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
+		carrot = {enabled = false, box = true, boxColor = {Color3.new(0,1,0), 1}, name = true, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = true, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
+		ghost1 = {enabled = false, box = true, boxColor = {Color3.new(0,1,0), 1}, name = true, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = true, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
+		glass = {enabled = false, box = true, boxColor = {Color3.new(0,1,0), 1}, name = true, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), tracer = true, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
+		deer = {enabled = false, box = true, boxColor = {Color3.new(0,1,0), 1}, name = true, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), healthText = true, healthTextColor = {Color3.new(0,1,0), 1}, healthTextOutline = true, healthTextOutlineColor = Color3.new(), tracer = true, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
+		mammoth = {enabled = false, box = true, boxColor = {Color3.new(0,1,0), 1}, name = true, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), healthText = true, healthTextColor = {Color3.new(0,1,0), 1}, healthTextOutline = true, healthTextOutlineColor = Color3.new(), tracer = true, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}},
+		scp = {enabled = false, box = true, boxColor = {Color3.new(0,1,0), 1}, name = true, nameColor = {Color3.new(0,1,0), 1}, nameOutline = true, nameOutlineColor = Color3.new(), healthText = true, healthTextColor = {Color3.new(0,1,0), 1}, healthTextOutline = true, healthTextOutlineColor = Color3.new(), tracer = true, tracerColor = {Color3.new(0,1,0), 1}, tracerOutline = true, tracerOutlineColor = {Color3.new(), 1}}
 	}
 }
 
