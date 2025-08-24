@@ -58,17 +58,32 @@ local function isBodyPart(name)
 	return name == "Head" or name:find("Torso") or name:find("Leg") or name:find("Arm")
 end
 
-local function getBoundingBox(parts)
-	local min, max
-	for i = 1, #parts do
-		local part = parts[i]
-		local cframe, size = part.CFrame, part.Size
-		min = min3(min or cframe.Position, (cframe - size*0.5).Position)
-		max = max3(max or cframe.Position, (cframe + size*0.5).Position)
+local function getBoundingBox(instance)
+	if instance:IsA("Model") then
+		local parts = {}
+		for _, part in ipairs(instance:GetDescendants()) do
+			if isA(part, "BasePart") then
+				parts[#parts + 1] = part
+			end
+		end
+		if #parts == 0 then
+			return getPivot(instance), instance:GetExtentsSize() or Vector3.new(2, 2, 2)
+		end
+		local min, max
+		for i = 1, #parts do
+			local part = parts[i]
+			local cframe, size = part.CFrame, part.Size
+			min = min3(min or cframe.Position, (cframe - size*0.5).Position)
+			max = max3(max or cframe.Position, (cframe + size*0.5).Position)
+		end
+		local center = (min + max)*0.5
+		local front = Vector3.new(center.X, center.Y, max.Z)
+		return CFrame.new(center, front), max - min
+	elseif isA(instance, "BasePart") then
+		return instance.CFrame, instance.Size
+	else
+		return getPivot(instance), Vector3.new(2, 2, 2)
 	end
-	local center = (min + max)*0.5
-	local front = Vector3.new(center.X, center.Y, max.Z)
-	return CFrame.new(center, front), max - min
 end
 
 local function worldToScreen(world)
@@ -195,15 +210,14 @@ function EspObject:Update()
 	self.enabled = settings.enabled and self.character and not
 		(#interface.whitelist > 0 and not find(interface.whitelist, self.instance.UserId or 0))
 
-	local head = self.enabled and (self.instance:IsA("Player") and findFirstChild(self.character, "Head") or getPivot(self.character).Position)
-	if not head then
+	if not self.enabled then
 		self.charCache = {}
 		self.onScreen = false
 		return
 	end
 
-	local headPos = self.instance:IsA("Player") and head.Position or head
-	local _, onScreen, depth = worldToScreen(headPos)
+	local cframe, size = getBoundingBox(self.character)
+	local _, onScreen, depth = worldToScreen(cframe.Position)
 	self.onScreen = onScreen
 	self.distance = depth
 
@@ -211,26 +225,12 @@ function EspObject:Update()
 		self.onScreen = false
 	end
 
-	if self.onScreen and self.instance:IsA("Player") then
-		local cache = self.charCache
-		local children = getChildren(self.character)
-		if not cache[1] or self.childCount ~= #children then
-			clear(cache)
-			for i = 1, #children do
-				local part = children[i]
-				if isA(part, "BasePart") and isBodyPart(part.Name) then
-					cache[#cache + 1] = part
-				end
-			end
-			self.childCount = #children
-		end
-		self.corners = calculateCorners(getBoundingBox(cache))
-	elseif self.onScreen then
-		self.corners = calculateCorners(getPivot(self.character), self.character:IsA("Model") and self.character:GetExtentsSize() or Vector3.new(2, 2, 2))
+	if self.onScreen then
+		self.corners = calculateCorners(cframe, size)
 	else
-		local cframe = camera.CFrame
-		local flat = fromMatrix(cframe.Position, cframe.RightVector, Vector3.yAxis)
-		local objectSpace = pointToObjectSpace(flat, headPos)
+		local camCframe = camera.CFrame
+		local flat = fromMatrix(camCframe.Position, camCframe.RightVector, Vector3.yAxis)
+		local objectSpace = pointToObjectSpace(flat, cframe.Position)
 		self.direction = Vector2.new(objectSpace.X, objectSpace.Z).Unit
 	end
 end
@@ -440,73 +440,6 @@ function ChamObject:Update()
 	end
 end
 
--- instance object
-local InstanceObject = {}
-InstanceObject.__index = InstanceObject
-
-function InstanceObject.new(instance, options)
-	local self = setmetatable({}, InstanceObject)
-	self.instance = assert(instance, "Missing argument #1 (Instance Expected)")
-	self.options = assert(options, "Missing argument #2 (table expected)")
-	self:Construct()
-	return self
-end
-
-function InstanceObject:Construct()
-	local options = self.options
-	options.enabled = options.enabled == nil and true or options.enabled
-	options.text = options.text or "{name}"
-	options.textColor = options.textColor or { Color3.new(1,1,1), 1 }
-	options.textOutline = options.textOutline == nil and true or options.textOutline
-	options.textOutlineColor = options.textOutlineColor or Color3.new()
-	options.textSize = options.textSize or 13
-	options.textFont = options.textFont or 2
-	options.limitDistance = options.limitDistance or false
-	options.maxDistance = options.maxDistance or 150
-	self.text = Drawing.new("Text")
-	self.text.Center = true
-	self.renderConnection = runService.Heartbeat:Connect(function(deltaTime)
-		self:Render(deltaTime)
-	end)
-end
-
-function InstanceObject:Destruct()
-	self.renderConnection:Disconnect()
-	self.text:Remove()
-end
-
-function InstanceObject:Render()
-	local instance = self.instance
-	if not instance or not instance.Parent then
-		return self:Destruct()
-	end
-	local text = self.text
-	local options = self.options
-	if not options.enabled then
-		text.Visible = false
-		return
-	end
-	local world = getPivot(instance).Position
-	local position, visible, depth = worldToScreen(world)
-	if options.limitDistance and depth > options.maxDistance then
-		visible = false
-	end
-	text.Visible = visible
-	if text.Visible then
-		text.Position = position
-		text.Color = options.textColor[1]
-		text.Transparency = options.textColor[2]
-		text.Outline = options.textOutline
-		text.OutlineColor = options.textOutlineColor
-		text.Size = options.textSize
-		text.Font = options.textFont
-		text.Text = options.text
-			:gsub("{name}", instance.Name)
-			:gsub("{distance}", round(depth))
-			:gsub("{position}", tostring(world))
-	end
-end
-
 -- interface
 local EspInterface = {
 	_hasLoaded = false,
@@ -631,19 +564,14 @@ local EspInterface = {
 	}
 }
 
-function EspInterface.AddInstance(instance, options, type)
+function EspInterface.AddInstance(instance, type)
 	local cache = EspInterface._objectCache
 	if cache[instance] then
 		warn("Instance handler already exists.")
 	else
-		if type == "player" or type == "scp" or type == "deer" or type == "mammoth" then
-			cache[instance] = {EspObject.new(instance, EspInterface), ChamObject.new(instance, EspInterface)}
-			cache[instance][1].type = type
-			cache[instance][2].type = type
-		else
-			cache[instance] = {InstanceObject.new(instance, options)}
-			cache[instance][1].type = type
-		end
+		cache[instance] = {EspObject.new(instance, EspInterface), ChamObject.new(instance, EspInterface)}
+		cache[instance][1].type = type
+		cache[instance][2].type = type
 	end
 	return cache[instance][1]
 end
@@ -667,26 +595,10 @@ function EspInterface.Load()
 	}
 
 	local function createObject(instance, type)
-		if type == "player" then
-			if instance == localPlayer then return end
-			EspInterface._objectCache[instance] = {EspObject.new(instance, EspInterface), ChamObject.new(instance, EspInterface)}
-			EspInterface._objectCache[instance][1].type = type
-			EspInterface._objectCache[instance][2].type = type
-		else
-			local options = {
-				enabled = EspInterface.settings[type].enabled,
-				text = "{name}",
-				textColor = EspInterface.settings[type].nameColor,
-				textOutline = true,
-				textOutlineColor = Color3.new(),
-				textSize = 13,
-				textFont = 2,
-				limitDistance = false,
-				maxDistance = 150
-			}
-			EspInterface._objectCache[instance] = {InstanceObject.new(instance, options)}
-			EspInterface._objectCache[instance][1].type = type
-		end
+		if type == "player" and instance == localPlayer then return end
+		EspInterface._objectCache[instance] = {EspObject.new(instance, EspInterface), ChamObject.new(instance, EspInterface)}
+		EspInterface._objectCache[instance][1].type = type
+		EspInterface._objectCache[instance][2].type = type
 	end
 
 	local function removeObject(instance)
