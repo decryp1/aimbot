@@ -222,7 +222,7 @@ function EspObject:Update()
 
 	if self.onScreen then
 		local cache = self.charCache
-		local rig = self.character -- Since getCharacter now returns Rig
+		local rig = self.character
 		local children = rig and getChildren(rig) or {}
 		if not cache[1] or self.childCount ~= #children then
 			clear(cache)
@@ -461,14 +461,14 @@ end
 function ChamObject:Update()
 	local highlight = self.highlight;
 	local interface = self.interface;
-	local character = interface.getCharacter(self.player); -- This now returns the Rig
+	local character = interface.getCharacter(self.player);
 	local options = interface.teamSettings[interface.isFriendly(self.player) and "friendly" or "enemy"];
 	local enabled = options.enabled and character and not
 		(#interface.whitelist > 0 and not find(interface.whitelist, self.player.UserId));
 
 	highlight.Enabled = enabled and options.chams;
 	if highlight.Enabled then
-		highlight.Adornee = character; -- Set Adornee to the Rig
+		highlight.Adornee = character;
 		highlight.FillColor = parseColor(self, options.chamsFillColor[1]);
 		highlight.FillTransparency = options.chamsFillColor[2];
 		highlight.OutlineColor = parseColor(self, options.chamsOutlineColor[1], true);
@@ -742,7 +742,7 @@ end
 
 function EspInterface.getHealth(player)
 	local character = player and EspInterface.getCharacter(player);
-	local rig = character -- Rig is now the character
+	local rig = character
 	local humanoid = rig and findFirstChildOfClass(rig, "Humanoid");
 	if humanoid then
 		return humanoid.Health, humanoid.MaxHealth;
@@ -751,17 +751,17 @@ function EspInterface.getHealth(player)
 end
 
 function EspInterface.getRole(player)
-	local character = player and EspInterface.getCharacter(player)
-	if character then
-		if character.Parent:FindFirstChild("Ghost") then
-			return "SPECTATOR"
-		elseif character.Parent:GetAttribute("HighlightTag") == "Hunter" then
-			return "HUNTER"
-		elseif character.Parent:GetAttribute("HighlightTag") == "Hider" then
-			return "HIDER"
-		end
-	end
-	return "UNKNOWN"
+    local character = player and player.Character
+    if character then
+        if character:GetAttribute("HighlightTag") == "Hunter" then
+            return "HUNTER"
+        elseif character:GetAttribute("HighlightTag") == "Hider" then
+            return "HIDER"
+        elseif character:FindFirstChild("Ghost") then
+            return "SPECTATOR"
+        end
+    end
+    return "HIDER"
 end
 
 return EspInterface;
