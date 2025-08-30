@@ -745,17 +745,18 @@ function EspInterface.getHealth(player)
 	return 100, 100;
 end
 
-function EspInterface.getRole(player)
-	local character = player and EspInterface.getCharacter(player)
-	local rig = character and findFirstChild(character, "Rig")
-	if rig then
-		if rig:FindFirstChild("RedVest") then
-			return "SEEKER"
-		elseif rig:FindFirstChild("BlueVest") then
-			return "HIDER"
-		end
-	end
-	return "UNKNOWN"
+function Sense.getRole(player)
+    local character = player and Sense.getCharacter(player)
+    if character then
+        if character:FindFirstChild("Ghost") then
+            return "SPECTATOR"
+        elseif character:GetAttribute("HighlightTag") == "Hunter" then
+            return "HUNTER"
+        elseif character:GetAttribute("HighlightTag") == "Hider" then
+            return "HIDER"
+        end
+    end
+    return "UNKNOWN"
 end
 
 return EspInterface;
