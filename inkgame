@@ -745,7 +745,7 @@ function EspInterface.getHealth(player)
 	return 100, 100;
 end
 
-function Sense.getRole(player)
+function EspInterface.getRole(player)
     local character = player and Sense.getCharacter(player)
     if character then
         if character:FindFirstChild("Ghost") then
