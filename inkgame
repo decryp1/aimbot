@@ -753,11 +753,11 @@ end
 function EspInterface.getRole(player)
 	local character = player and EspInterface.getCharacter(player)
 	if character then
-		if character:FindFirstChild("Ghost") then
+		if character.Parent:FindFirstChild("Ghost") then
 			return "SPECTATOR"
-		elseif character:GetAttribute("HighlightTag") == "Hunter" then
+		elseif character.Parent:GetAttribute("HighlightTag") == "Hunter" then
 			return "HUNTER"
-		elseif character:GetAttribute("HighlightTag") == "Hider" then
+		elseif character.Parent:GetAttribute("HighlightTag") == "Hider" then
 			return "HIDER"
 		end
 	end
