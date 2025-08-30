@@ -356,16 +356,16 @@ function EspObject:Render()
 			(visible.distance.Visible and DISTANCE_OFFSET + Vector2.yAxis*visible.distance.TextBounds.Y or Vector2.zero)
 	end
 
-	visible.role.Visible = enabled and onScreen and (options.hideresp or options.killeresp)
+	visible.role.Visible = enabled and onScreen and options.role
 	if visible.role.Visible then
 		local role = visible.role
 		role.Text = self.role
 		role.Size = interface.sharedSettings.textSize
 		role.Font = interface.sharedSettings.textFont
-		role.Color = self.role == "HIDER" and Color3.fromRGB(0, 0, 255) or Color3.fromRGB(255, 0, 0)
-		role.Transparency = 1
-		role.Outline = true
-		role.OutlineColor = Color3.new()
+		role.Color = parseColor(self, options.roleColor[1]) or (self.role == "HIDER" and Color3.fromRGB(0, 0, 255) or self.role == "HUNTER" and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(128, 128, 128))
+		role.Transparency = options.roleColor[2] or 1
+		role.Outline = options.roleOutline or true
+		role.OutlineColor = parseColor(self, options.roleOutlineColor[1], true) or Color3.new()
 		role.Position = corners.topRight + Vector2.new(2, -role.TextBounds.Y/3)
 	end
 
@@ -608,7 +608,10 @@ local EspInterface = {
 			chamsVisibleOnly = false,
 			chamsFillColor = { Color3.new(0.2, 0.2, 0.2), 0.5 },
 			chamsOutlineColor = { Color3.new(1,0,0), 0 },
-			killeresp = false
+			role = false,
+			roleColor = { Color3.new(1,1,1), 1 },
+			roleOutline = true,
+			roleOutlineColor = { Color3.new(), 1 }
 		},
 		friendly = {
 			enabled = false,
@@ -656,8 +659,10 @@ local EspInterface = {
 			chamsVisibleOnly = false,
 			chamsFillColor = { Color3.new(0.2, 0.2, 0.2), 0.5 },
 			chamsOutlineColor = { Color3.new(0,1,0), 0 },
-			hideresp = false,
-			killeresp = false
+			role = false,
+			roleColor = { Color3.new(1,1,1), 1 },
+			roleOutline = true,
+			roleOutlineColor = { Color3.new(), 1 }
 		}
 	}
 }
