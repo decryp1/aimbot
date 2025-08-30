@@ -205,7 +205,7 @@ function EspObject:Update()
 	self.enabled = self.options.enabled and self.character and not
 		(#interface.whitelist > 0 and not find(interface.whitelist, self.player.UserId))
 
-	local head = self.enabled and findFirstChild(self.character, "Head")
+	local head = self.enabled and findFirstChild(self.character, "Rig") and findFirstChild(findFirstChild(self.character, "Rig"), "Head")
 	if not head then
 		self.charCache = {}
 		self.onScreen = false
@@ -222,7 +222,8 @@ function EspObject:Update()
 
 	if self.onScreen then
 		local cache = self.charCache
-		local children = getChildren(self.character)
+		local rig = findFirstChild(self.character, "Rig")
+		local children = rig and getChildren(rig) or {}
 		if not cache[1] or self.childCount ~= #children then
 			clear(cache)
 
@@ -730,12 +731,14 @@ function EspInterface.getTeamColor(player)
 end
 
 function EspInterface.getCharacter(player)
-	return player.Character;
+	local character = player.Character
+	return character and findFirstChild(character, "Rig") or nil
 end
 
 function EspInterface.getHealth(player)
 	local character = player and EspInterface.getCharacter(player);
-	local humanoid = character and findFirstChildOfClass(character, "Humanoid");
+	local rig = character and findFirstChild(character, "Rig")
+	local humanoid = rig and findFirstChildOfClass(rig, "Humanoid");
 	if humanoid then
 		return humanoid.Health, humanoid.MaxHealth;
 	end
@@ -744,10 +747,11 @@ end
 
 function EspInterface.getRole(player)
 	local character = player and EspInterface.getCharacter(player)
-	if character then
-		if character:FindFirstChild("RedVest") then
+	local rig = character and findFirstChild(character, "Rig")
+	if rig then
+		if rig:FindFirstChild("RedVest") then
 			return "SEEKER"
-		elseif character:FindFirstChild("BlueVest") then
+		elseif rig:FindFirstChild("BlueVest") then
 			return "HIDER"
 		end
 	end
