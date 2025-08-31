@@ -344,8 +344,8 @@ function EspObject:Render()
 visible.role.Visible = enabled and onScreen and options.role
 if visible.role.Visible then
     local role = visible.role
-    local roleData = self.role -- self.role is now a table from getRole
-    role.Text = roleData.role -- Extract the role string
+    local roleData = self.role
+    role.Text = roleData.role
     role.Size = interface.sharedSettings.textSize
     role.Font = interface.sharedSettings.textFont
     role.Color = roleData.color or parseColor(self, options.roleColor[1]) or (roleData.role == "HIDER" and Color3.fromRGB(0, 0, 255) or roleData.role == "HUNTER" and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(128, 128, 128))
@@ -354,19 +354,6 @@ if visible.role.Visible then
     role.OutlineColor = parseColor(self, options.roleOutlineColor[1], true) or Color3.new()
     role.Position = corners.topRight + Vector2.new(2, -role.TextBounds.Y/3)
 end
-
-	visible.role.Visible = enabled and onScreen and options.role
-	if visible.role.Visible then
-		local role = visible.role
-		role.Text = self.role
-		role.Size = interface.sharedSettings.textSize
-		role.Font = interface.sharedSettings.textFont
-		role.Color = parseColor(self, options.roleColor[1]) or (self.role == "HIDER" and Color3.fromRGB(0, 0, 255) or self.role == "HUNTER" and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(128, 128, 128))
-		role.Transparency = options.roleColor[2] or 1
-		role.Outline = options.roleOutline or true
-		role.OutlineColor = parseColor(self, options.roleOutlineColor[1], true) or Color3.new()
-		role.Position = corners.topRight + Vector2.new(2, -role.TextBounds.Y/3)
-	end
 
 	visible.tracer.Visible = enabled and onScreen and options.tracer
 	visible.tracerOutline.Visible = visible.tracer.Visible and options.tracerOutline
