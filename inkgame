@@ -195,55 +195,55 @@ function EspObject:Destruct()
 end
 
 function EspObject:Update()
-	local interface = self.interface
+    local interface = self.interface
 
-	self.options = interface.teamSettings[interface.isFriendly(self.player) and "friendly" or "enemy"]
-	self.character = interface.getCharacter(self.player)
-	self.health, self.maxHealth = interface.getHealth(self.player)
-	self.weapon = interface.getWeapon(self.player)
-	self.role = interface.getRole(self.player)
-	self.enabled = self.options.enabled and self.character and not
-		(#interface.whitelist > 0 and not find(interface.whitelist, self.player.UserId))
+    self.options = interface.teamSettings[interface.isFriendly(self.player) and "friendly" or "enemy"]
+    self.character = interface.getCharacter(self.player)
+    self.health, self.maxHealth = interface.getHealth(self.player)
+    self.weapon = interface.getWeapon(self.player)
+    self.role = interface.getRole(self.player) -- Now returns a table
+    self.enabled = self.options.enabled and self.character and not
+        (#interface.whitelist > 0 and not find(interface.whitelist, self.player.UserId))
 
-	local head = self.enabled and findFirstChild(self.character, "Head")
-	if not head then
-		self.charCache = {}
-		self.onScreen = false
-		return
-	end
+    local head = self.enabled and findFirstChild(self.character, "Head")
+    if not head then
+        self.charCache = {}
+        self.onScreen = false
+        return
+    end
 
-	local _, onScreen, depth = worldToScreen(head.Position)
-	self.onScreen = onScreen
-	self.distance = depth
+    local _, onScreen, depth = worldToScreen(head.Position)
+    self.onScreen = onScreen
+    self.distance = depth
 
-	if interface.sharedSettings.limitDistance and depth > interface.sharedSettings.maxDistance then
-		self.onScreen = false
-	end
+    if interface.sharedSettings.limitDistance and depth > interface.sharedSettings.maxDistance then
+        self.onScreen = false
+    end
 
-	if self.onScreen then
-		local cache = self.charCache
-		local rig = self.character
-		local children = rig and getChildren(rig) or {}
-		if not cache[1] or self.childCount ~= #children then
-			clear(cache)
+    if self.onScreen then
+        local cache = self.charCache
+        local rig = self.character
+        local children = rig and getChildren(rig) or {}
+        if not cache[1] or self.childCount ~= #children then
+            clear(cache)
 
-			for i = 1, #children do
-				local part = children[i]
-				if isA(part, "BasePart") and isBodyPart(part.Name) then
-					cache[#cache + 1] = part
-				end
-			end
+            for i = 1, #children do
+                local part = children[i]
+                if isA(part, "BasePart") and isBodyPart(part.Name) then
+                    cache[#cache + 1] = part
+                end
+            end
 
-			self.childCount = #children
-		end
+            self.childCount = #children
+        end
 
-		self.corners = calculateCorners(getBoundingBox(cache))
-	elseif self.options.offScreenArrow then
-		local cframe = camera.CFrame
-		local flat = fromMatrix(cframe.Position, cframe.RightVector, Vector3.yAxis)
-		local objectSpace = pointToObjectSpace(flat, head.Position)
-		self.direction = Vector2.new(objectSpace.X, objectSpace.Z).Unit
-	end
+        self.corners = calculateCorners(getBoundingBox(cache))
+    elseif self.options.offScreenArrow then
+        local cframe = camera.CFrame
+        local flat = fromMatrix(cframe.Position, cframe.RightVector, Vector3.yAxis)
+        local objectSpace = pointToObjectSpace(flat, head.Position)
+        self.direction = Vector2.new(objectSpace.X, objectSpace.Z).Unit
+    end
 end
 
 function EspObject:Render()
@@ -341,20 +341,19 @@ function EspObject:Render()
 		distance.Position = (corners.bottomLeft + corners.bottomRight)*0.5 + DISTANCE_OFFSET
 	end
 
-	visible.weapon.Visible = enabled and onScreen and options.weapon
-	if visible.weapon.Visible then
-		local weapon = visible.weapon
-		weapon.Text = self.weapon
-		weapon.Size = interface.sharedSettings.textSize
-		weapon.Font = interface.sharedSettings.textFont
-		weapon.Color = parseColor(self, options.weaponColor[1])
-		weapon.Transparency = options.weaponColor[2]
-		weapon.Outline = options.weaponOutline
-		weapon.OutlineColor = parseColor(self, options.weaponOutlineColor, true)
-		weapon.Position =
-			(corners.bottomLeft + corners.bottomRight)*0.5 +
-			(visible.distance.Visible and DISTANCE_OFFSET + Vector2.yAxis*visible.distance.TextBounds.Y or Vector2.zero)
-	end
+visible.role.Visible = enabled and onScreen and options.role
+if visible.role.Visible then
+    local role = visible.role
+    local roleData = self.role -- self.role is now a table from getRole
+    role.Text = roleData.role -- Extract the role string
+    role.Size = interface.sharedSettings.textSize
+    role.Font = interface.sharedSettings.textFont
+    role.Color = roleData.color or parseColor(self, options.roleColor[1]) or (roleData.role == "HIDER" and Color3.fromRGB(0, 0, 255) or roleData.role == "HUNTER" and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(128, 128, 128))
+    role.Transparency = options.roleColor[2] or 1
+    role.Outline = options.roleOutline or true
+    role.OutlineColor = parseColor(self, options.roleOutlineColor[1], true) or Color3.new()
+    role.Position = corners.topRight + Vector2.new(2, -role.TextBounds.Y/3)
+end
 
 	visible.role.Visible = enabled and onScreen and options.role
 	if visible.role.Visible then
