@@ -43,7 +43,7 @@ local HEALTH_TEXT_OFFSET = Vector2.new(3, 0);
 local HEALTH_BAR_OUTLINE_OFFSET = Vector2.new(0, 1);
 local NAME_OFFSET = Vector2.new(0, 2);
 local DISTANCE_OFFSET = Vector2.new(0, 2);
-local ROLE_OFFSET = Vector2.new(-18, -6);
+local ROLE_OFFSET = Vector2.new(4, 2);
 local VERTICES = {
 	Vector3.new(-1, -1, -1),
 	Vector3.new(-1, 1, -1),
@@ -344,7 +344,7 @@ function EspObject:Render()
 		role.Transparency = options.roleColor[2];
 		role.Outline = options.roleOutline;
 		role.OutlineColor = parseColor(self, options.roleOutlineColor, true);
-		role.Position = corners.topRight + ROLE_OFFSET - Vector2.new(role.TextBounds.X * 0.02, role.TextBounds.Y * 0.45);
+		role.Position = corners.topRight + ROLE_OFFSET + Vector2.new(0, role.TextBounds.Y * 0.02);
 	end
 
 	visible.distance.Visible = enabled and onScreen and self.distance and options.distance;
