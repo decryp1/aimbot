@@ -197,10 +197,18 @@ end
 function EspObject:Update()
 	local interface = self.interface;
 
-	self.options = interface.roleSettings[self.role];
+	self.role = interface.getRole(self.player) or "Spectators"
+
+	self.options = interface.roleSettings[self.role]
+	if not self.options then
+		warn("No role settings for:", self.role, "for player:", self.player.Name)
+		self.options = interface.roleSettings.Spectators
+	end
+
 	self.character = interface.getCharacter(self.player);
 	self.health, self.maxHealth = interface.getHealth(self.player);
 	self.weapon = interface.getWeapon(self.player);
+
 	self.enabled = self.options.enabled and self.character and not
 		(#interface.whitelist > 0 and not find(interface.whitelist, self.player.UserId));
 
@@ -460,8 +468,8 @@ function ChamObject:Update()
 	local highlight = self.highlight;
 	local interface = self.interface;
 	local character = interface.getCharacter(self.player);
-	local role = interface.getRole(self.player);
-	local options = interface.roleSettings[role];
+	local role = interface.getRole(self.player) or "Spectators"
+	local options = interface.roleSettings[role] or interface.roleSettings.Spectators
 	local enabled = options.enabled and character and not
 		(#interface.whitelist > 0 and not find(interface.whitelist, self.player.UserId));
 
