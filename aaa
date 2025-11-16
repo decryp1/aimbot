@@ -821,10 +821,6 @@ function EspInterface.getTeamColor(player)
 end
 
 function EspInterface.getName(player)
-	return player.DisplayName;
-end
-
-function EspInterface.getName(player)
     local char = EspInterface.getCharacter(player);
     local display = player.DisplayName;
     if char then
