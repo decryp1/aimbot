@@ -198,11 +198,10 @@ function EspObject:Update()
 	local interface = self.interface;
 
 	self.role = interface.getRole(self.player) or "Spectator"
-
 	self.options = interface.roleSettings[self.role]
 	if not self.options then
-		warn("No role settings for:", self.role, "for player:", self.player.Name)
-		self.options = interface.roleSettings.Spectator
+    	warn("No role settings for:", self.role, "for player:", self.player.Name)
+    	self.options = interface.roleSettings.Spectator
 	end
 
 	self.character = interface.getCharacter(self.player);
@@ -781,6 +780,17 @@ function EspInterface.Unload()
 end
 
 -- forsaken specific
+function EspInterface.getRole(player)
+    local char = player.Character;
+    if char and char.Parent then
+        local folder = char.Parent;
+        if folder.Name == "Survivors" then return "Survivor"
+        elseif folder.Name == "Killers" then return "Killer"
+        elseif folder.Name == "Spectators" then return "Spectator" end
+    end
+    return nil;
+end
+
 function EspInterface.getCharacter(player)
 	local char = player.Character;
 	if char and char.Parent then
