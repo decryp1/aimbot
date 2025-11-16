@@ -343,7 +343,7 @@ function EspObject:Render()
     	role.Transparency = options.roleColor[2];
     	role.Outline = options.roleOutline;
     	role.OutlineColor = parseColor(self, options.roleOutlineColor, true);
-    	local sidetosideoffsetxoffsetomg = (self.role == "Survivor") and 28 or 20;
+    	local sidetosideoffsetxoffsetomg = (self.role == "Survivor") and 30 or 23;
     	role.Position = corners.topRight + Vector2.new(sidetosideoffsetxoffsetomg, -role.TextBounds.Y + 10)
 	end
 print("dsdsd")
