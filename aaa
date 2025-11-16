@@ -197,12 +197,12 @@ end
 function EspObject:Update()
 	local interface = self.interface;
 
-	self.role = interface.getRole(self.player) or "Spectators"
+	self.role = interface.getRole(self.player) or "Spectator"
 
 	self.options = interface.roleSettings[self.role]
 	if not self.options then
 		warn("No role settings for:", self.role, "for player:", self.player.Name)
-		self.options = interface.roleSettings.Spectators
+		self.options = interface.roleSettings.Spectator
 	end
 
 	self.character = interface.getCharacter(self.player);
@@ -468,8 +468,8 @@ function ChamObject:Update()
 	local highlight = self.highlight;
 	local interface = self.interface;
 	local character = interface.getCharacter(self.player);
-	local role = interface.getRole(self.player) or "Spectators"
-	local options = interface.roleSettings[role] or interface.roleSettings.Spectators
+	local role = interface.getRole(self.player) or "Spectator"
+	local options = interface.roleSettings[role] or interface.roleSettings.Spectator
 	local enabled = options.enabled and character and not
 		(#interface.whitelist > 0 and not find(interface.whitelist, self.player.UserId));
 
@@ -569,7 +569,7 @@ local EspInterface = {
 		useTeamColor = false
 	},
 	roleSettings = {
-		Survivors = {
+		Survivor = {
 			enabled = false,
 			box = false,
 			boxColor = { Color3.new(0,1,0), 1 },
@@ -620,7 +620,7 @@ local EspInterface = {
 			chamsFillColor = { Color3.new(0.2, 0.2, 0.2), 0.5 },
 			chamsOutlineColor = { Color3.new(0,1,0), 0 }
 		},
-		Killers = {
+		Killer = {
 			enabled = false,
 			box = false,
 			boxColor = { Color3.new(1,0,0), 1 },
@@ -671,7 +671,7 @@ local EspInterface = {
 			chamsFillColor = { Color3.new(0.2, 0.2, 0.2), 0.5 },
 			chamsOutlineColor = { Color3.new(1,0,0), 0 }
 		},
-		Spectators = {
+		Spectator = {
 			enabled = false,
 			box = false,
 			boxColor = { Color3.new(0,0,1), 1 },
