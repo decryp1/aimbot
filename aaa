@@ -344,9 +344,9 @@ function EspObject:Render()
 		role.Transparency = options.roleColor[2];
 		role.Outline = options.roleOutline;
 		role.OutlineColor = parseColor(self, options.roleOutlineColor, true);
-		role.Position = corners.topRight + Vector2.new(0, -role.TextBounds.Y/2)
+		role.Position = corners.topRight + Vector2.new(0, -role.TextBounds.Y)
 	end
-
+print("asd")
 	visible.distance.Visible = enabled and onScreen and self.distance and options.distance;
 	if visible.distance.Visible then
 		local distance = visible.distance;
