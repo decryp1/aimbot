@@ -335,15 +335,16 @@ function EspObject:Render()
 
 	visible.role.Visible = enabled and onScreen and options.role;
 	if visible.role.Visible then
-		local role = visible.role;
-		role.Text = self.role;
-		role.Size = interface.sharedSettings.textSize;
-		role.Font = interface.sharedSettings.textFont;
-		role.Color = parseColor(self, options.roleColor[1]);
-		role.Transparency = options.roleColor[2];
-		role.Outline = options.roleOutline;
-		role.OutlineColor = parseColor(self, options.roleOutlineColor, true);
-		role.Position = corners.topRight + Vector2.new(32, -role.TextBounds.Y + 10)
+    	local role = visible.role;
+    	role.Text = self.role;
+    	role.Size = interface.sharedSettings.textSize;
+    	role.Font = interface.sharedSettings.textFont;
+    	role.Color = parseColor(self, options.roleColor[1]);
+    	role.Transparency = options.roleColor[2];
+    	role.Outline = options.roleOutline;
+    	role.OutlineColor = parseColor(self, options.roleOutlineColor, true);
+    	local sidetosideoffsetxoffsetomg = (self.role == "Survivor") and 28 or 20;
+    	role.Position = corners.topRight + Vector2.new(sidetosideoffsetxoffsetomg, -role.TextBounds.Y + 10)
 	end
 print("dsdsd")
 	visible.distance.Visible = enabled and onScreen and self.distance and options.distance;
