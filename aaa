@@ -781,17 +781,6 @@ function EspInterface.Unload()
 end
 
 -- forsaken specific
-function EspInterface.getRole(player)
-	local char = player.Character;
-	if char and char.Parent then
-		local folder = char.Parent;
-		if folder.Name == "Survivors" or folder.Name == "Killers" or folder.Name == "Spectators" then
-			return folder.Name;
-		end
-	end
-	return nil;
-end
-
 function EspInterface.getCharacter(player)
 	local char = player.Character;
 	if char and char.Parent then
@@ -833,6 +822,25 @@ end
 
 function EspInterface.getName(player)
 	return player.DisplayName;
+end
+
+function EspInterface.getName(player)
+    local char = EspInterface.getCharacter(player);
+    local display = player.DisplayName;
+    if char then
+        local actor = char:GetAttribute("ActorDisplayName") or char.Name;
+        return display .. " (" .. actor .. ")";
+    end
+    return display;
+end
+
+function EspInterface.getSkinName(player)
+    local char = EspInterface.getCharacter(player);
+    if char then
+        local skin = char:GetAttribute("SkinDisplayName");
+        return skin and skin ~= "" and skin or "NOSKIN";
+    end
+    return "NOSKIN";
 end
 
 return EspInterface;
