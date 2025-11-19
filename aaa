@@ -568,6 +568,24 @@ local EspInterface = {
 		maxDistance = 150,
 		useTeamColor = false
 	},
+
+	objectSettings = {
+    	generator = {
+        	enabled = false,
+        	box3d = false,
+        	box3dcolor = { Color3.new(0,1,0), 1 },
+        	progress = false,
+        	ignoreFinished = false,
+        	ignoreFake = false
+		},
+    	loot = {
+        	enabled = false,
+        	box = false,
+        	boxcolor = { Color3.new(1,1,1), 1 },
+        	name = false,
+        	namecolor = { Color3.new(1,1,1), 1 }
+    	}
+	},
 	roleSettings = {
 		Survivor = {
 			enabled = false,
@@ -725,6 +743,134 @@ local EspInterface = {
 	}
 };
 
+local ObjectEspObject = {};
+ObjectEspObject.__index = ObjectEspObject;
+function ObjectEspObject.new(instance, interface)
+    local self = setmetatable({}, ObjectEspObject);
+    self.instance = instance;
+    self.interface = interface;
+    self:Construct();
+    return self;
+end
+function ObjectEspObject:_create(class, properties)
+    local drawing = Drawing.new(class);
+    for property, value in next, properties do
+        pcall(function() drawing[property] = value; end);
+    end
+    self.bin[#self.bin + 1] = drawing;
+    return drawing;
+end
+function ObjectEspObject:Construct()
+    self.bin = {};
+    self.drawings = {
+        box = self:_create("Square", { Thickness = 1, Visible = false }),
+        boxOutline = self:_create("Square", { Thickness = 3, Visible = false }),
+        name = self:_create("Text", { Center = true, Visible = false }),
+        progress = self:_create("Text", { Center = true, Visible = false }),
+        box3d = {
+            { self:_create("Line", { Thickness = 1, Visible = false }) },
+            { self:_create("Line", { Thickness = 1, Visible = false }) },
+            { self:_create("Line", { Thickness = 1, Visible = false }) },
+            { self:_create("Line", { Thickness = 1, Visible = false }) },
+            { self:_create("Line", { Thickness = 1, Visible = false }) },
+            { self:_create("Line", { Thickness = 1, Visible = false }) },
+            { self:_create("Line", { Thickness = 1, Visible = false }) },
+            { self:_create("Line", { Thickness = 1, Visible = false }) },
+            { self:_create("Line", { Thickness = 1, Visible = false }) },
+            { self:_create("Line", { Thickness = 1, Visible = false }) },
+            { self:_create("Line", { Thickness = 1, Visible = false }) },
+            { self:_create("Line", { Thickness = 1, Visible = false }) }
+        }
+    };
+    self.renderConnection = runService.Heartbeat:Connect(function()
+        self:Update();
+        self:Render();
+    end);
+end
+function ObjectEspObject:Destruct()
+    self.renderConnection:Disconnect();
+    for i = 1, #self.bin do
+        self.bin[i]:Remove();
+    end
+    clear(self);
+end
+function ObjectEspObject:Update()
+    local obj = self.instance;
+    if not obj or not obj.Parent then return self:Destruct() end;
+    local settings = self.interface.objectSettings;
+    self.corners = calculateCorners(obj.CFrame, obj.Size);
+    self.type = nil;
+    if obj.Name == "Main" and obj.Parent.Name:lower():find("generator") then
+        local gen = settings.generator;
+        if gen.enabled then
+            if gen.ignoreFake and obj.Parent.Name:lower():find("fake") then return end;
+            local prog = obj.Parent:FindFirstChild("Progress");
+            if gen.ignoreFinished and prog and prog.Value >= 100 then return end;
+            self.type = "generator";
+            self.progress = prog and prog.Value or 0;
+        end
+    elseif obj.Parent and obj.Parent.Name == "Map" and obj.Parent.Parent.Name == "Ingame" then
+        if settings.loot.enabled and (obj.Name == "Medkit" or obj.Name == "BloxyCola") then
+            self.type = "loot";
+        end
+    end
+end
+function ObjectEspObject:Render()
+    if not self.type then
+        for _, drawing in ipairs(self.bin) do drawing.Visible = false end;
+        return;
+    end
+    local corners = self.corners;
+    local settings = self.interface.objectSettings[self.type];
+    if self.type == "loot" then
+        local box = self.drawings.box;
+        local boxOutline = self.drawings.boxOutline;
+        box.Position = corners.topLeft;
+        box.Size = corners.bottomRight - corners.topLeft;
+        box.Color = settings.boxcolor[1];
+        box.Transparency = settings.boxcolor[2];
+        box.Visible = settings.box;
+        boxOutline.Position = box.Position;
+        boxOutline.Size = box.Size;
+        boxOutline.Color = Color3.new(0,0,0);
+        boxOutline.Transparency = settings.boxcolor[2];
+        boxOutline.Visible = settings.box;
+        local name = self.drawings.name;
+        name.Text = self.instance.Name;
+        name.Position = (corners.topLeft + corners.topRight)*0.5 - Vector2.new(0, name.TextBounds.Y + 5);
+        name.Color = settings.namecolor[1];
+        name.Transparency = settings.namecolor[2];
+        name.Size = 13;
+        name.Visible = settings.name;
+    elseif self.type == "generator" then
+        local lines = self.drawings.box3d;
+        local color = settings.box3dcolor[1];
+        local trans = settings.box3dcolor[2];
+        for i = 1, 12 do
+    local line = lines[i]
+    line.Visible = settings.box3d
+    line.Color = color
+    line.Transparency = trans
+    if settings.box3d then
+        local edges = {
+            {1,2}, {2,3}, {3,4}, {4,1},
+            {5,6}, {6,7}, {7,8}, {8,5},
+            {1,5}, {2,6}, {3,7}, {4,8}
+        }
+        local edge = edges[i]
+        line.From = corners.corners[edge[1]]
+        line.To = corners.corners[edge[2]]
+    end
+end
+        local prog = self.drawings.progress;
+        prog.Text = self.progress .. "%";
+        prog.Position = corners.topLeft + Vector2.new(0, -10);
+        prog.Color = Color3.new(0,1,0);
+        prog.Size = 14;
+        prog.Visible = settings.progress;
+    end
+end
+
 function EspInterface.AddInstance(instance, options)
 	local cache = EspInterface._objectCache;
 	if cache[instance] then
@@ -736,33 +882,63 @@ function EspInterface.AddInstance(instance, options)
 end
 
 function EspInterface.Load()
-	assert(not EspInterface._hasLoaded, "Esp has already been loaded.");
+    assert(not EspInterface._hasLoaded, "Esp has already been loaded.")
 
-	local function createObject(player)
-		EspInterface._objectCache[player] = {
-			EspObject.new(player, EspInterface),
-			ChamObject.new(player, EspInterface)
-		};
-	end
+    local function createobject(p)
+        EspInterface._objectCache[p] = {
+            EspObject.new(p, EspInterface),
+            ChamObject.new(p, EspInterface)
+        }
+    end
+    local function removeobject(p)
+        local o = EspInterface._objectCache[p]
+        if o then
+            for i = 1, #o do o[i]:Destruct() end
+            EspInterface._objectCache[p] = nil
+        end
+    end
 
-	local function removeObject(player)
-		local object = EspInterface._objectCache[player];
-		if object then
-			for i = 1, #object do
-				object[i]:Destruct();
-			end
-			EspInterface._objectCache[player] = nil;
-		end
-	end
+    for i = 2, #players:GetPlayers() do
+        createobject(players:GetPlayers()[i])
+    end
+    EspInterface.playeradded = players.PlayerAdded:Connect(createobject)
+    EspInterface.playerremoving = players.PlayerRemoving:Connect(removeobject)
 
-	local plrs = players:GetPlayers();
-	for i = 2, #plrs do
-		createObject(plrs[i]);
-	end
+    task.spawn(function()
+        local ingame = workspace:WaitForChild("Map"):WaitForChild("Ingame")
 
-	EspInterface.playerAdded = players.PlayerAdded:Connect(createObject);
-	EspInterface.playerRemoving = players.PlayerRemoving:Connect(removeObject);
-	EspInterface._hasLoaded = true;
+        local function scan()
+            local map = ingame:FindFirstChild("Map")
+            if not map then return end
+            for i, child in ipairs(map:GetChildren()) do
+                if child:IsA("BasePart") and not EspInterface._objectCache[child] then
+                    if child.Name == "Main" and child.Parent.Name:lower():find("generator") then
+                        EspInterface._objectCache[child] = { ObjectEspObject.new(child, EspInterface) }
+                    elseif child.Name == "Medkit" or child.Name == "BloxyCola" then
+                        EspInterface._objectCache[child] = { ObjectEspObject.new(child, EspInterface) }
+                    end
+                end
+            end
+        end
+
+        ingame.ChildAdded:Connect(function(c)
+            if c.Name == "Map" then
+                task.wait()
+                scan()
+            end
+        end)
+
+        if ingame:FindFirstChild("Map") then
+            task.wait()
+            scan()
+        end
+
+        while task.wait(5) do
+            scan()
+        end
+    end)
+
+    EspInterface._hasLoaded = true
 end
 
 function EspInterface.Unload()
@@ -779,6 +955,8 @@ function EspInterface.Unload()
 	EspInterface.playerRemoving:Disconnect();
 	EspInterface._hasLoaded = false;
 end
+
+
 
 -- forsaken specific
 function EspInterface.getRole(player)
