@@ -346,7 +346,7 @@ function EspObject:Render()
     	local sidetosideoffsetxoffsetomg = (self.role == "Survivor") and 30 or 23;
     	role.Position = corners.topRight + Vector2.new(sidetosideoffsetxoffsetomg, -role.TextBounds.Y + 10)
 	end
-print("dsdsd")
+
 	visible.distance.Visible = enabled and onScreen and self.distance and options.distance;
 	if visible.distance.Visible then
 		local distance = visible.distance;
