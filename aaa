@@ -951,8 +951,8 @@ function EspInterface.Unload()
 		EspInterface._objectCache[index] = nil;
 	end
 
-	EspInterface.playerAdded:Disconnect();
-	EspInterface.playerRemoving:Disconnect();
+	EspInterface.playeradded:Disconnect();
+	EspInterface.playerremoving:Disconnect();
 	EspInterface._hasLoaded = false;
 end
 
